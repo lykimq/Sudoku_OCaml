@@ -1,0 +1,15 @@
+profile = default
+margin = 80
+exp-grouping = preserve
+doc-comments = before
+break-separators = after
+space-around-arrays = false
+space-around-lists = false
+space-around-records = false
+type-decl = sparse
+field-space = tight
+sequence-style = separator
+if-then-else = keyword-first
+let-and = sparse
+space-around-records = true
+wrap-comments = true
