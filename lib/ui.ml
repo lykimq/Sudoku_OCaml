@@ -1,13 +1,49 @@
 open GMain
 
+let create_menu window board_ref (vbox : GPack.box) =
+  let menubar = GMenu.menu_bar ~packing:vbox#pack () in
+
+  (* Create game menu *)
+  let factory = new GMenu.factory menubar in
+  let game_menu = factory#add_submenu "Game" in
+  let game_factory = new GMenu.factory game_menu in
+
+  (* Create submenu items *)
+  let new_game_menu = game_factory#add_submenu "New Game" in
+  let new_game_factory = new GMenu.factory new_game_menu in
+
+  (* Add difficulty options *)
+  let add_difficulty_item label difficulty =
+    ignore
+      (new_game_factory#add_item label ~callback:(fun () ->
+           board_ref :=
+             Board.of_array
+               (Generate_board.generate_random_board ~difficulty ()) ;
+           GtkBase.Widget.queue_draw window#as_widget))
+  in
+
+  add_difficulty_item "Easy" Generate_board.Easy ;
+  add_difficulty_item "Medium" Generate_board.Medium ;
+  add_difficulty_item "Hard" Generate_board.Hard ;
+
+  (* Add menu items to game menu *)
+  ignore (game_factory#add_separator ()) ;
+  ignore (game_factory#add_item "Quit" ~callback:quit)
+
 let create_window board_ref =
   (* Create window *)
+  let padding = 40 in
   let window =
-    GWindow.window ~title:"Sudoku" ~width:Board.total_size
-      ~height:Board.total_size ~resizable:true ()
+    GWindow.window ~title:"Sudoku"
+      ~width:(Board.total_size + padding)
+      ~height:(Board.total_size + padding)
+      ~resizable:true ()
   in
 
   let vbox = GPack.vbox ~packing:window#add () in
+
+  (* Add menu *)
+  create_menu window board_ref vbox ;
 
   (* Handle window close *)
   let _ = window#connect#destroy ~callback:quit in
