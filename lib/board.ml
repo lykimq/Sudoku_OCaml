@@ -38,7 +38,9 @@ let draw_board (ctx : Cairo.context) board selected =
       (match selected with
       | Some (sr, sc) when sr = row && sc = col ->
           let sr, sg, sb = selected_color in
-          Cairo.set_source_rgb ctx sr sg sb
+          Cairo.set_source_rgb ctx sr sg sb ;
+          Cairo.rectangle ctx x y ~w:cell_size ~h:cell_size ;
+          Cairo.fill ctx
       | _ ->
           let br, bg, bb = background_color in
           Cairo.set_source_rgb ctx br bg bb ;
@@ -57,6 +59,7 @@ let draw_board (ctx : Cairo.context) board selected =
           Cairo.select_font_face ctx "Sans" ~weight:Cairo.Bold ;
           Cairo.set_font_size ctx (cell_size *. 0.5) ;
           Cairo.move_to ctx (x +. 15.0) (y +. 35.0) ;
+
           let text = string_of_int n in
           let extents = Cairo.text_extents ctx text in
           let text_x = x +. ((cell_size -. extents.width) /. 2.0) in
@@ -113,88 +116,6 @@ let of_array array =
 
 let to_array board =
   Array.map (Array.map (function Empty -> 0 | Fixed n | Mutable n -> n)) board
-
-let is_valid_pos row col = row >= 0 && row < 9 && col >= 0 && col < 9
-
-let get_cell board ~row ~col =
-  if is_valid_pos row col
-  then board.(row).(col)
-  else invalid_arg "Invalid position"
-
-let value_in_row board ~row ~value =
-  let rec check col =
-    if col >= 9
-    then false
-    else
-      match board.(row).(col) with
-      | Empty -> check (col + 1)
-      | (Fixed n | Mutable n) when n = value -> true
-      | _ -> check (col + 1)
-  in
-  check 0
-
-let value_in_col board ~col ~value =
-  let rec check row =
-    if row >= 9
-    then false
-    else
-      match board.(row).(col) with
-      | Empty -> check (row + 1)
-      | (Fixed n | Mutable n) when n = value -> true
-      | _ -> check (row + 1)
-  in
-  check 0
-
-let value_in_box board ~row ~col ~value =
-  let box_row = row / 3 * 3 in
-  let box_col = col / 3 * 3 in
-  let rec check_box r c =
-    if r >= box_row + 3
-    then false
-    else if c >= box_col + 3
-    then check_box (r + 1) box_col
-    else
-      match board.(r).(c) with
-      | Empty -> check_box (r + 1) (c + 1)
-      | (Fixed n | Mutable n) when n = value -> true
-      | _ -> check_box (r + 1) (c + 1)
-  in
-  check_box box_row box_col
-
-let is_valid_move board ~row ~col ~value =
-  value >= 1 && value <= 9
-  && (not (value_in_row board ~row ~value))
-  && (not (value_in_col board ~col ~value))
-  && not (value_in_box board ~row ~col ~value)
-
-let set_cell board ~row ~col ~value =
-  if not (is_valid_pos row col)
-  then None
-  else if not (is_valid_move board ~row ~col ~value)
-  then None
-  else
-    let new_board = Array.map Array.copy board in
-    new_board.(row).(col) <- Mutable value ;
-    Some new_board
-
-let is_completed board =
-  try
-    for i = 0 to 8 do
-      for j = 0 to 8 do
-        match board.(i).(j) with Empty -> raise Exit | _ -> ()
-      done
-    done ;
-    true
-  with Exit -> false
-
-let get_empty_pos board =
-  let result = ref [] in
-  for i = 0 to 8 do
-    for j = 0 to 8 do
-      if board.(i).(j) = Empty then result := (i, j) :: !result
-    done
-  done ;
-  !result
 
 let pp fmt board =
   for i = 0 to 8 do

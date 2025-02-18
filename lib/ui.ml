@@ -1,5 +1,20 @@
 open GMain
 
+let current_board = ref (Board.create ())
+let current_drawing_area = ref None
+let selected = ref None
+
+let update_board new_board =
+  current_board := new_board ;
+  match !current_drawing_area with
+  | Some drawing_area -> GtkBase.Widget.queue_draw drawing_area#as_widget
+  | None -> ()
+
+let refresh_display () =
+  match !current_drawing_area with
+  | Some area -> GtkBase.Widget.queue_draw area#as_widget
+  | None -> ()
+
 let create_menu window board_ref (vbox : GPack.box) =
   let menubar = GMenu.menu_bar ~packing:vbox#pack () in
 
@@ -30,7 +45,7 @@ let create_menu window board_ref (vbox : GPack.box) =
   ignore (game_factory#add_separator ()) ;
   ignore (game_factory#add_item "Quit" ~callback:quit)
 
-let create_window board_ref =
+let create_window board_ref ~key_press_handler ~click_handler =
   (* Create window *)
   let padding = 40 in
   let window =
@@ -55,13 +70,15 @@ let create_window board_ref =
       ()
   in
 
+  (* Store drawing area reference for global access *)
+  current_drawing_area := Some drawing_area ;
+  current_board := !board_ref ;
+
   let _ =
     drawing_area#event#connect#configure ~callback:(fun _ ->
         GtkBase.Widget.queue_draw drawing_area#as_widget ;
         true)
   in
-
-  let selected = ref None in
 
   (* Drawing callback *)
   let _ =
@@ -76,31 +93,74 @@ let create_window board_ref =
     drawing_area#event#connect#button_press ~callback:(fun ev ->
         let x = int_of_float (GdkEvent.Button.x ev) in
         let y = int_of_float (GdkEvent.Button.y ev) in
-        selected := Board.screen_to_board_pos x y ;
-        GtkBase.Widget.queue_draw drawing_area#as_widget ;
+        Printf.printf "Raw click at (x=%d, y=%d)\n" x y ;
+
+        (* Add event button check *)
+        let button = GdkEvent.Button.button ev in
+        Printf.printf "Mouse button: %d\n" button ;
+
+        (* Make sure we're only handling left clicks *)
+        if button = 1
+        then begin
+          let pos = Board.screen_to_board_pos x y in
+          Printf.printf "Converting to board position: %s\n"
+            (match pos with
+            | Some (row, col) -> Printf.sprintf "(%d,%d)" row col
+            | None -> "None") ;
+
+          selected := pos ;
+          Printf.printf "Updated selected cell to: %s\n"
+            (match !selected with
+            | Some (row, col) -> Printf.sprintf "(%d,%d)" row col
+            | None -> "None") ;
+
+          click_handler x y ;
+          GtkBase.Widget.queue_draw drawing_area#as_widget
+        end ;
+
+        flush stdout ;
         true)
   in
+
+  (* Make sure drawing area can receive mouse events *)
+  drawing_area#event#add [`BUTTON_PRESS] ;
+  drawing_area#misc#set_can_focus true ;
 
   (* Key press callback *)
   let _ =
     window#event#connect#key_press ~callback:(fun ev ->
-        match (GdkEvent.Key.keyval ev, !selected) with
-        | k, Some (row, col) when k >= 49 && k <= 57 ->
-            let value = k - 48 in
-            (match Board.set_cell !board_ref ~row ~col ~value with
-            | Some new_board ->
-                board_ref := new_board ;
-                GtkBase.Widget.queue_draw drawing_area#as_widget
-            | None -> ()) ;
-            true
-        | _, _ -> false)
+        let key = GdkEvent.Key.keyval ev in
+        Printf.printf "Key pressed: %d\n" key ;
+        Printf.printf "Current selection: %s\n"
+          (match !selected with
+          | Some (row, col) -> Printf.sprintf "(%d,%d)" row col
+          | None -> "None") ;
+        let result =
+          match (!selected, key_press_handler key) with
+          | Some (row, col), Some value ->
+              Printf.printf "Attempting to set value %d at (%d,%d)\n" value row
+                col ;
+              (match Solve.set_cell !board_ref ~row ~col ~value with
+              | Some new_board ->
+                  Printf.printf "Cell updated successfully\n" ;
+                  board_ref := new_board ;
+                  GtkBase.Widget.queue_draw drawing_area#as_widget
+              | None -> Printf.printf "Failed to update cell\n") ;
+              true
+          | _, _ ->
+              Printf.printf "No valid selection or key handler result\n" ;
+              false
+        in
+        flush stdout ;
+        result)
   in
 
   window
 
-let start_ui initial_board =
+let start_ui ?(key_press_handler = fun _ -> None)
+    ?(click_handler = fun _ _ -> ()) initial_board =
   let _ = GMain.init () in
   let board = ref (Board.of_array initial_board) in
-  let window = create_window board in
+  let window = create_window board ~key_press_handler ~click_handler in
   window#show () ;
   GMain.main ()
