@@ -65,6 +65,18 @@ let create_menu window board_ref (vbox : GPack.box) =
   ignore (game_factory#add_separator ()) ;
   ignore (game_factory#add_item "Quit" ~callback:quit)
 
+let check_game_completion board =
+  if Board.is_full board && Board.is_valid board
+  then (
+    let dialog =
+      GWindow.message_dialog
+        ~message:"Congratulations! You've solved the puzzle!"
+        ~message_type:`INFO ~buttons:GWindow.Buttons.ok ~title:"Game Complete"
+        ()
+    in
+    ignore (dialog#run ()) ;
+    dialog#destroy ())
+
 let create_window board_ref ~key_press_handler ~click_handler =
   (* Create window *)
   let padding = 40 in
@@ -170,6 +182,7 @@ let create_window board_ref ~key_press_handler ~click_handler =
                   debug "Cell cleared successfully\n" ;
                   Board.clear_invalid ~row ~col ;
                   board_ref := new_board ;
+                  check_game_completion !board_ref ;
                   GtkBase.Widget.queue_draw drawing_area#as_widget
               | None -> debug "Failed to clear cell\n") ;
               true
@@ -180,7 +193,9 @@ let create_window board_ref ~key_press_handler ~click_handler =
                   debug "Cell updated successfully\n" ;
                   board_ref := new_board ;
                   if is_valid
-                  then Board.clear_invalid ~row ~col
+                  then (
+                    Board.clear_invalid ~row ~col ;
+                    check_game_completion new_board)
                   else Board.mark_invalid ~row ~col ;
                   GtkBase.Widget.queue_draw drawing_area#as_widget
               | None -> debug "Failed to update cell\n") ;

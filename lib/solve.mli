@@ -6,3 +6,7 @@ val set_cell :  t ->
 val clear_cell : t -> row:int -> col:int -> t option
 
 val get_all_hints : t -> int list array array
+
+val is_board_solved : t -> bool
+
+val get_game_status : Board.cell array array -> string option

@@ -30,3 +30,7 @@ val is_invalid : row:int -> col:int -> bool
 val draw_hints :  Cairo.context -> int list array array -> unit
 
 val filter_hints : t -> int list array array -> int list array array
+
+val is_full : t -> bool
+
+val is_valid : t -> bool

@@ -194,3 +194,81 @@ let filter_hints original_board (hints_board : int list array array) :
           else [])
         row_array)
     hints_board
+
+let is_valid_number board row col num =
+  let check_row () =
+    let rec check i =
+      if i >= 9
+      then true
+      else
+        match board.(row).(i) with
+        | Empty -> check (i + 1)
+        | Fixed n | Mutable n ->
+            if i <> col && n = num then false else check (i + 1)
+    in
+    check 0
+  in
+
+  let check_column () =
+    let rec check i =
+      if i >= 9
+      then true
+      else
+        match board.(i).(col) with
+        | Empty -> check (i + 1)
+        | Fixed n | Mutable n ->
+            if i <> row && n = num then false else check (i + 1)
+    in
+    check 0
+  in
+
+  let check_box () =
+    let box_row = row / 3 * 3 in
+    let box_col = col / 3 * 3 in
+    let rec check_box_cell r c =
+      if r >= box_row + 3
+      then true
+      else if c >= box_col + 3
+      then check_box_cell (r + 1) box_col
+      else
+        match board.(r).(c) with
+        | Empty -> check_box_cell r (c + 1)
+        | Fixed n | Mutable n ->
+            if (r <> row || c <> col) && n = num
+            then false
+            else check_box_cell r (c + 1)
+    in
+    check_box_cell box_row box_col
+  in
+
+  check_row () && check_column () && check_box ()
+
+let is_valid board =
+  let valid_cell row col =
+    match board.(row).(col) with
+    | Empty -> true
+    | Fixed n | Mutable n -> is_valid_number board row col n
+  in
+  let rec check_all_cells row col =
+    if row >= 9
+    then true
+    else if col >= 9
+    then check_all_cells (row + 1) 0
+    else if valid_cell row col
+    then check_all_cells row (col + 1)
+    else false
+  in
+  check_all_cells 0 0
+
+let is_full board =
+  let rec check_all_cells row col =
+    if row >= 9
+    then true
+    else if col >= 9
+    then check_all_cells (row + 1) 0
+    else
+      match board.(row).(col) with
+      | Empty -> false
+      | _ -> check_all_cells row (col + 1)
+  in
+  check_all_cells 0 0
