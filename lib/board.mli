@@ -20,3 +20,13 @@ val of_array : int array array -> t
 val to_array : t -> int array array
 
 val pp : Format.formatter -> t -> unit
+
+val mark_invalid : row:int -> col:int -> unit
+
+val clear_invalid : row:int -> col:int -> unit
+
+val is_invalid : row:int -> col:int -> bool
+
+val draw_hints :  Cairo.context -> int list array array -> unit
+
+val filter_hints : t -> int list array array -> int list array array

@@ -7,11 +7,14 @@ let () =
   in
 
   let key_press_handler key =
-    match Char.chr key with
-    | '1' .. '9' as c ->
-        let value = int_of_string (String.make 1 c) in
-        Some value
-    | _ -> None
+    match key with
+    | 65288 (* Backspace*) | 65535 (* Delete *) -> Some 0
+    | key -> (
+        match Char.chr key with
+        | '1' .. '9' as c ->
+            let value = int_of_string (String.make 1 c) in
+            Some value
+        | _ -> None)
   in
 
   let click_handler _x _y = Ui.refresh_display () in

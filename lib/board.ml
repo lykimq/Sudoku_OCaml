@@ -5,6 +5,13 @@ type cell =
   | Fixed of int
   | Mutable of int
 
+type cell_state = Invalid
+
+let invalid_cells = Hashtbl.create 81
+let mark_invalid ~row ~col = Hashtbl.replace invalid_cells (row, col) Invalid
+let clear_invalid ~row ~col = Hashtbl.remove invalid_cells (row, col)
+let is_invalid ~row ~col = Hashtbl.mem invalid_cells (row, col)
+
 type t = cell array array
 
 (* GTK+ related constants *)
@@ -20,6 +27,7 @@ let fixed_color = (0., 0., 0.)
 let mutable_color = (0., 0., 1.) (* blue *)
 let selected_color = (0.8, 0.8, 0.1) (* yellow *)
 let error_color = (1., 0.2, 0.2) (* red *)
+let hint_color = (0.5, 0.5, 0.5) (* gray color for hints *)
 let create () = Array.make_matrix 9 9 Empty
 
 let draw_board (ctx : Cairo.context) board selected =
@@ -52,7 +60,11 @@ let draw_board (ctx : Cairo.context) board selected =
       | Empty -> ()
       | Fixed n | Mutable n ->
           let color =
-            if board.(row).(col) = Fixed n then fixed_color else mutable_color
+            if is_invalid ~row ~col
+            then error_color
+            else if board.(row).(col) = Fixed n
+            then fixed_color
+            else mutable_color
           in
           let r, g, b = color in
           Cairo.set_source_rgb ctx r g b ;
@@ -129,3 +141,56 @@ let pp fmt board =
     Format.fprintf fmt "@,"
   done ;
   Format.fprintf fmt "@]"
+
+(* Add this function to draw hints *)
+let draw_hints cr (hints : int list array array) =
+  let hint_size = int_of_float (cell_size *. 0.2) in
+  (* Make hints much smaller - 20% of cell size *)
+
+  (* Set hint color *)
+  let r, g, b = hint_color in
+  Cairo.set_source_rgb cr r g b ;
+  Cairo.select_font_face cr "Sans" ~weight:Cairo.Normal ;
+
+  Array.iteri
+    (fun row row_array ->
+      Array.iteri
+        (fun col hints ->
+          if hints <> []
+          then
+            let x = margin +. (float_of_int col *. cell_size) in
+            let y = margin +. (float_of_int row *. cell_size) in
+            (* Draw each possible number in a grid within the cell *)
+            List.iteri
+              (fun i n ->
+                let hint_row = i / 3 in
+                let hint_col = i mod 3 in
+                let hint_x =
+                  x +. (float_of_int hint_col *. cell_size /. 3.) +. 5.
+                in
+                let hint_y =
+                  y +. (float_of_int hint_row *. cell_size /. 3.) +. 15.
+                in
+                Cairo.move_to cr hint_x hint_y ;
+                Cairo.set_font_size cr (float_of_int hint_size) ;
+                Cairo.show_text cr (string_of_int n))
+              hints)
+        row_array)
+    hints
+
+let is_empty cell = match cell with Empty -> true | _ -> false
+let is_fixed cell = match cell with Fixed _ -> true | _ -> false
+
+let filter_hints original_board (hints_board : int list array array) :
+    int list array array =
+  Array.mapi
+    (fun row row_array ->
+      Array.mapi
+        (fun col value ->
+          if
+            is_empty original_board.(row).(col)
+            && not (is_fixed original_board.(row).(col))
+          then value
+          else [])
+        row_array)
+    hints_board

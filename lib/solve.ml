@@ -48,12 +48,50 @@ let is_valid_move board ~row ~col ~value =
   && (not (value_in_col board ~col ~value))
   && not (value_in_box board ~row ~col ~value)
 
+let get_valid_numbers board ~row ~col =
+  if not (is_valid_pos row col)
+  then []
+  else
+    match board.(row).(col) with
+    | Fixed _ | Mutable _ -> []
+    | Empty ->
+        List.init 9 (fun i -> i + 1)
+        |> List.filter (fun value -> is_valid_move board ~row ~col ~value)
+
+let get_all_hints board =
+  let hints = Array.make_matrix 9 9 [] in
+  for row = 0 to 8 do
+    for col = 0 to 8 do
+      hints.(row).(col) <- get_valid_numbers board ~row ~col
+    done
+  done ;
+  hints
+
+(* Clear a cell back to Empty *)
+let clear_cell board ~row ~col =
+  if not (is_valid_pos row col)
+  then None
+  else
+    match board.(row).(col) with
+    | Fixed _ -> None (* Cannot clear fixed cells *)
+    | Empty | Mutable _ ->
+        let new_board = Array.map Array.copy board in
+        new_board.(row).(col) <- Empty ;
+        Some new_board
+
 let set_cell board ~row ~col ~value =
   if not (is_valid_pos row col)
   then None
-  else if not (is_valid_move board ~row ~col ~value)
-  then None
   else
-    let new_board = Array.map Array.copy board in
-    new_board.(row).(col) <- Mutable value ;
-    Some new_board
+    match board.(row).(col) with
+    | Fixed _ -> None (* Cannot set value in fixed cells *)
+    | Empty | Mutable _ ->
+        let new_board = Array.map Array.copy board in
+        new_board.(row).(col) <- Mutable value ;
+        if is_valid_move board ~row ~col ~value
+        then (
+          Board.clear_invalid ~row ~col ;
+          Some (new_board, true))
+        else (
+          Board.mark_invalid ~row ~col ;
+          Some (new_board, false))

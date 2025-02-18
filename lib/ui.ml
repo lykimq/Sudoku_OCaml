@@ -15,6 +15,7 @@ let debug fmt =
 let current_board = ref (Board.create ())
 let current_drawing_area = ref None
 let selected = ref None
+let show_hints = ref false
 
 let update_board new_board =
   current_board := new_board ;
@@ -52,6 +53,13 @@ let create_menu window board_ref (vbox : GPack.box) =
   add_difficulty_item "Easy" Generate_board.Easy ;
   add_difficulty_item "Medium" Generate_board.Medium ;
   add_difficulty_item "Hard" Generate_board.Hard ;
+
+  (* Add hint toggle *)
+  ignore (game_factory#add_separator ()) ;
+  ignore
+    (game_factory#add_item "Show Hints" ~callback:(fun _menuitem ->
+         show_hints := not !show_hints ;
+         refresh_display ())) ;
 
   (* Add menu items to game menu *)
   ignore (game_factory#add_separator ()) ;
@@ -97,6 +105,12 @@ let create_window board_ref ~key_press_handler ~click_handler =
     drawing_area#event#connect#expose ~callback:(fun _ ->
         let cr = Cairo_gtk.create drawing_area#misc#window in
         Board.draw_board cr !board_ref !selected ;
+        (if !show_hints
+         then
+           let hints_board = Solve.get_all_hints !board_ref in
+           (* Only draw hints for empty, mutable cells *)
+           let filtered_hints = Board.filter_hints !board_ref hints_board in
+           Board.draw_hints cr filtered_hints) ;
         true)
   in
 
@@ -149,12 +163,25 @@ let create_window board_ref ~key_press_handler ~click_handler =
           | None -> "None") ;
         let result =
           match (!selected, key_press_handler key) with
+          | Some (row, col), Some 0 ->
+              debug "Attempting to clear cell at (%d,%d)\n" row col ;
+              (match Solve.clear_cell !board_ref ~row ~col with
+              | Some new_board ->
+                  debug "Cell cleared successfully\n" ;
+                  Board.clear_invalid ~row ~col ;
+                  board_ref := new_board ;
+                  GtkBase.Widget.queue_draw drawing_area#as_widget
+              | None -> debug "Failed to clear cell\n") ;
+              true
           | Some (row, col), Some value ->
               debug "Attempting to set value %d at (%d,%d)\n" value row col ;
               (match Solve.set_cell !board_ref ~row ~col ~value with
-              | Some new_board ->
+              | Some (new_board, is_valid) ->
                   debug "Cell updated successfully\n" ;
                   board_ref := new_board ;
+                  if is_valid
+                  then Board.clear_invalid ~row ~col
+                  else Board.mark_invalid ~row ~col ;
                   GtkBase.Widget.queue_draw drawing_area#as_widget
               | None -> debug "Failed to update cell\n") ;
               true
