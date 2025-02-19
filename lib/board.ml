@@ -5,14 +5,13 @@ type cell =
   | Fixed of int
   | Mutable of int
 
+type t = cell array array
 type cell_state = Invalid
 
 let invalid_cells = Hashtbl.create 81
 let mark_invalid ~row ~col = Hashtbl.replace invalid_cells (row, col) Invalid
 let clear_invalid ~row ~col = Hashtbl.remove invalid_cells (row, col)
 let is_invalid ~row ~col = Hashtbl.mem invalid_cells (row, col)
-
-type t = cell array array
 
 (* GTK+ related constants *)
 let cell_size = 60.0
@@ -119,11 +118,13 @@ let screen_to_board_pos x y =
 
 let of_array array =
   let board = create () in
-  for i = 0 to 8 do
-    for j = 0 to 8 do
-      board.(i).(j) <- (match array.(i).(j) with 0 -> Empty | n -> Fixed n)
-    done
-  done ;
+  Array.iteri
+    (fun i row ->
+      Array.iteri
+        (fun j value ->
+          board.(i).(j) <- (if value = 0 then Empty else Fixed value))
+        row)
+    array ;
   board
 
 let to_array board =
@@ -142,7 +143,6 @@ let pp fmt board =
   done ;
   Format.fprintf fmt "@]"
 
-(* Add this function to draw hints *)
 let draw_hints cr (hints : int list array array) =
   let hint_size = int_of_float (cell_size *. 0.2) in
   (* Make hints much smaller - 20% of cell size *)
@@ -196,52 +196,48 @@ let filter_hints original_board (hints_board : int list array array) :
     hints_board
 
 let is_valid_number board row col num =
-  let check_row () =
+  (* Helper function to check if a number exists in given range *)
+  let exists_in_range check_fn =
     let rec check i =
       if i >= 9
       then true
       else
-        match board.(row).(i) with
+        match check_fn i with
         | Empty -> check (i + 1)
-        | Fixed n | Mutable n ->
-            if i <> col && n = num then false else check (i + 1)
+        | Fixed n | Mutable n -> if n = num then false else check (i + 1)
     in
     check 0
   in
 
-  let check_column () =
-    let rec check i =
-      if i >= 9
-      then true
-      else
-        match board.(i).(col) with
-        | Empty -> check (i + 1)
-        | Fixed n | Mutable n ->
-            if i <> row && n = num then false else check (i + 1)
-    in
-    check 0
+  (* Check row *)
+  let valid_in_row =
+    exists_in_range (fun i -> if i = col then Empty else board.(row).(i))
   in
 
-  let check_box () =
-    let box_row = row / 3 * 3 in
-    let box_col = col / 3 * 3 in
-    let rec check_box_cell r c =
+  (* Check column *)
+  let valid_in_column =
+    exists_in_range (fun i -> if i = row then Empty else board.(i).(col))
+  in
+
+  (* Check 3x3 box *)
+  let valid_in_box =
+    let box_row, box_col = (row / 3 * 3, col / 3 * 3) in
+    let rec check_box r c =
       if r >= box_row + 3
       then true
       else if c >= box_col + 3
-      then check_box_cell (r + 1) box_col
+      then check_box (r + 1) box_col
+      else if r = row && c = col
+      then check_box r (c + 1)
       else
         match board.(r).(c) with
-        | Empty -> check_box_cell r (c + 1)
-        | Fixed n | Mutable n ->
-            if (r <> row || c <> col) && n = num
-            then false
-            else check_box_cell r (c + 1)
+        | Empty -> check_box r (c + 1)
+        | Fixed n | Mutable n -> if n = num then false else check_box r (c + 1)
     in
-    check_box_cell box_row box_col
+    check_box box_row box_col
   in
 
-  check_row () && check_column () && check_box ()
+  valid_in_row && valid_in_column && valid_in_box
 
 let is_valid board =
   let valid_cell row col =
