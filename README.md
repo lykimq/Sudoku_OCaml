@@ -4,7 +4,7 @@ A Sudoku game implementation in OCaml with a GTK-based graphical user interface.
 
 <figure>
   <img src="pics/no_hints.png" alt="Sudoku Game Board With No Hints">
-  <figcaption>Figure 1: Initial game board with empty cells and fixed numbers</figcaption>
+  <figcaption>Figure 1: Initial game board with empty cells, fixed numbers, valid numbers</figcaption>
 </figure>
 
 <figure>
