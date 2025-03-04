@@ -86,6 +86,57 @@ let test_duplicate_numbers_in_box () =
   in
   check bool "Duplicate numbers in box" false (Board.is_board_solved board)
 
+let test_invalid_range_board () =
+  let board =
+    create_board
+      [
+        [5; 3; 4; 6; 7; 8; 9; 1; 2];
+        [6; 7; 2; 1; 9; 5; 3; 4; 8];
+        [1; 9; 8; 3; 4; 2; 5; 6; 7];
+        [8; 5; 9; 7; 6; 1; 4; 2; 3];
+        [4; 2; 6; 8; 5; 3; 7; 9; 1];
+        [7; 1; 3; 9; 2; 4; 8; 5; 6];
+        [9; 6; 1; 5; 3; 7; 2; 8; 4];
+        [2; 8; 7; 4; 1; 9; 6; 3; 5];
+        [3; 4; 5; 2; 8; 6; 1; 7; 10];
+      ]
+  in
+  check bool "Invalid range board" false (Board.is_board_solved board)
+
+let test_all_same_number_board () =
+  let board =
+    create_board
+      [
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+        [1; 1; 1; 1; 1; 1; 1; 1; 1];
+      ]
+  in
+  check bool "All same number board" false (Board.is_board_solved board)
+
+let test_multiple_empty_cells_board () =
+  let board =
+    create_board
+      [
+        [5; 3; 4; 6; 7; 8; 9; 1; 2];
+        [6; 7; 2; 1; 9; 5; 3; 4; 8];
+        [1; 9; 8; 3; 4; 2; 5; 6; 7];
+        [8; 5; 9; 7; 6; 1; 4; 2; 3];
+        [4; 2; 6; 8; 5; 3; 7; 9; 1];
+        [7; 1; 3; 9; 2; 4; 8; 5; 6];
+        [9; 6; 1; 5; 3; 7; 2; 8; 4];
+        [2; 8; 7; 4; 1; 9; 6; 3; 5];
+        [3; 4; 5; 2; 8; 6; 1; 0; 0];
+      ]
+  in
+  check bool "Multiple empty cells board" false (Board.is_board_solved board)
+
 let () =
   Alcotest.run "Sudoku"
     [
@@ -99,5 +150,10 @@ let () =
             test_duplicate_numbers_in_column;
           test_case "test_duplicate_numbers_in_box" `Quick
             test_duplicate_numbers_in_box;
+          test_case "test_invalid_range_board" `Quick test_invalid_range_board;
+          test_case "test_all_same_number_board" `Quick
+            test_all_same_number_board;
+          test_case "test_multiple_empty_cells_board" `Quick
+            test_multiple_empty_cells_board;
         ] );
     ]
