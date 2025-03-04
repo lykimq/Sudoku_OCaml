@@ -38,3 +38,8 @@ val is_valid : t -> bool
 val is_valid_number : t -> int -> int -> int -> bool
 
 val is_board_solved : t -> bool
+
+(* Validation functions *)
+val value_in_row : t -> row:int -> value:int -> bool
+val value_in_col : t -> col:int -> value:int -> bool
+val value_in_box : t -> row:int -> col:int -> value:int -> bool

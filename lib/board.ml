@@ -208,47 +208,55 @@ let filter_hints original_board (hints_board : int list array array) :
     hints_board
 
 (* Helper function to check if a number exists in given range *)
-let exists_in_range check_fn num =
-  let rec check i =
-    if i >= 9
-    then true
+let value_in_row board ~row ~value =
+  let rec check col =
+    if col >= 9
+    then false
     else
-      match check_fn i with
-      | Empty -> check (i + 1)
-      | Fixed n | Mutable n -> if n = num then false else check (i + 1)
+      match board.(row).(col) with
+      | Empty -> check (col + 1)
+      | (Fixed n | Mutable n) when n = value -> true
+      | _ -> check (col + 1)
   in
   check 0
 
-(* Helper function to check if a number exists in the 3x3 box *)
-let valid_in_box board row col num =
-  let box_row, box_col = (row / 3 * 3, col / 3 * 3) in
+let value_in_col board ~col ~value =
+  let rec check row =
+    if row >= 9
+    then false
+    else
+      match board.(row).(col) with
+      | Empty -> check (row + 1)
+      | (Fixed n | Mutable n) when n = value -> true
+      | _ -> check (row + 1)
+  in
+  check 0
+
+let value_in_box board ~row ~col ~value =
+  let box_row = row / 3 * 3 in
+  let box_col = col / 3 * 3 in
   let rec check_box r c =
     if r >= box_row + 3
-    then true
+    then false
     else if c >= box_col + 3
     then check_box (r + 1) box_col
-    else if r = row && c = col
-    then check_box r (c + 1)
     else
       match board.(r).(c) with
       | Empty -> check_box r (c + 1)
-      | Fixed n | Mutable n -> if n = num then false else check_box r (c + 1)
+      | (Fixed n | Mutable n) when n = value -> true
+      | _ -> check_box r (c + 1)
   in
   check_box box_row box_col
 
 (* Helper function to check if a number is valid in a cell *)
 let is_valid_number board row col num =
   (* Check row *)
-  let valid_in_row =
-    exists_in_range (fun i -> if i = col then Empty else board.(row).(i))
-  in
+  let valid_in_row = not (value_in_row board ~row ~value:num) in
   (* Check column *)
-  let valid_in_column =
-    exists_in_range (fun i -> if i = row then Empty else board.(i).(col))
-  in
+  let valid_in_column = not (value_in_col board ~col ~value:num) in
   (* Check 3x3 box *)
-  let valid_in_box = valid_in_box board row col num in
-  valid_in_row num && valid_in_column num && valid_in_box
+  let valid_in_box = not (value_in_box board ~row ~col ~value:num) in
+  valid_in_row && valid_in_column && valid_in_box
 
 (* Helper function to check if a board is valid *)
 let is_valid board =
@@ -282,31 +290,34 @@ let is_full board =
   in
   check_all_cells 0 0
 
-(* Helper function to check if a board is solved *)
+(* Helper function to check if a board is solved: - Check if there are no empty
+   cells - Verifies each row and column contains numbers 1-9 - Verifies each 3x3
+   box contains numbers 1-9 *)
 let is_board_solved board =
+  (* Check if a set of numbers contains all digits 1-9 *)
   let is_valid_set numbers =
     let sorted = List.sort compare numbers in
     sorted = [1; 2; 3; 4; 5; 6; 7; 8; 9]
   in
 
-  (* Check all rows *)
+  (* Check all rows contains numbers 1-9 *)
   let check_rows () =
     let rec check_row row =
       if row >= 9
       then true
       else
         let numbers =
-          Array.to_list
-            (Array.map
-               (function Empty -> 0 | Fixed n | Mutable n -> n)
-               board.(row))
+          List.init 9 (fun col ->
+              match board.(row).(col) with
+              | Empty -> 0
+              | Fixed n | Mutable n -> n)
         in
         if is_valid_set numbers then check_row (row + 1) else false
     in
     check_row 0
   in
 
-  (* Check all columns *)
+  (* Check all columns contains numbers 1-9 *)
   let check_columns () =
     let rec check_col col =
       if col >= 9
@@ -323,7 +334,7 @@ let is_board_solved board =
     check_col 0
   in
 
-  (* Check all 3x3 boxes *)
+  (* Check all 3x3 boxes contains numbers 1-9 *)
   let check_boxes () =
     let rec check_box box_row box_col =
       if box_row >= 9
