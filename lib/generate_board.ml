@@ -3,6 +3,23 @@ type difficulty =
   | Medium
   | Hard
 
+(* Fill diagonal 3x3 boxes *)
+let fill_diagonal_box board start_row start_col =
+  let nums = Array.init 9 (fun i -> i + 1) in
+  for i = 8 downto 1 do
+    let j = Random.int (i + 1) in
+    let temp = nums.(i) in
+    nums.(i) <- nums.(j) ;
+    nums.(j) <- temp
+  done ;
+  let k = ref 0 in
+  for i = 0 to 2 do
+    for j = 0 to 2 do
+      board.(start_row + i).(start_col + j) <- nums.(!k) ;
+      incr k
+    done
+  done
+
 let generate_random_board ?(difficulty = Easy) () =
   Random.self_init () ;
   let board = Array.make_matrix 9 9 0 in
@@ -10,20 +27,7 @@ let generate_random_board ?(difficulty = Easy) () =
 
   (* Fill diagonal 3x3 boxes *)
   let fill_diagonal_box start_row start_col =
-    let nums = Array.init 9 (fun i -> i + 1) in
-    for i = 8 downto 1 do
-      let j = Random.int (i + 1) in
-      let temp = nums.(i) in
-      nums.(i) <- nums.(j) ;
-      nums.(j) <- temp
-    done ;
-    let k = ref 0 in
-    for i = 0 to 2 do
-      for j = 0 to 2 do
-        board.(start_row + i).(start_col + j) <- nums.(!k) ;
-        incr k
-      done
-    done
+    fill_diagonal_box board start_row start_col
   in
 
   (* Fill the diagonal 3x3 boxes *)
@@ -32,24 +36,6 @@ let generate_random_board ?(difficulty = Easy) () =
   fill_diagonal_box 6 6 ;
 
   (* Use backtracking to fill the rest of the board *)
-  let is_valid row col num =
-    let block_row = row / 3 * 3 in
-    let block_col = col / 3 * 3 in
-    let valid = ref true in
-
-    (* Check row and column *)
-    for i = 0 to 8 do
-      if board.(row).(i) = num || board.(i).(col) = num then valid := false
-    done ;
-
-    (* Check 3x3 box *)
-    for i = 0 to 2 do
-      for j = 0 to 2 do
-        if board.(block_row + i).(block_col + j) = num then valid := false
-      done
-    done ;
-    !valid
-  in
   let rec solve row col =
     if row = 9
     then true
@@ -69,7 +55,7 @@ let generate_random_board ?(difficulty = Easy) () =
       let i = ref 0 in
       while (not !found) && !i < 9 do
         let num = nums.(!i) in
-        if is_valid row col num
+        if Board.is_valid_number (Board.of_array board) row col num
         then (
           board.(row).(col) <- num ;
           if solve row (col + 1) then found := true else board.(row).(col) <- 0) ;

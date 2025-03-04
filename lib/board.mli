@@ -34,3 +34,7 @@ val filter_hints : t -> int list array array -> int list array array
 val is_full : t -> bool
 
 val is_valid : t -> bool
+
+val is_valid_number : t -> int -> int -> int -> bool
+
+val is_board_solved : t -> bool

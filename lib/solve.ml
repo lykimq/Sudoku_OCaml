@@ -101,76 +101,8 @@ let set_cell board ~row ~col ~value =
           Board.mark_invalid ~row ~col ;
           Some (new_board, false))
 
-let is_board_solved board =
-  let is_valid_set numbers =
-    let sorted = List.sort compare numbers in
-    sorted = [1; 2; 3; 4; 5; 6; 7; 8; 9]
-  in
-
-  (* Check all rows *)
-  let check_rows () =
-    let rec check_row row =
-      if row >= 9
-      then true
-      else
-        let numbers =
-          Array.to_list
-            (Array.map
-               (function Empty -> 0 | Fixed n | Mutable n -> n)
-               board.(row))
-        in
-        if is_valid_set numbers then check_row (row + 1) else false
-    in
-    check_row 0
-  in
-
-  (* Check all columns *)
-  let check_columns () =
-    let rec check_col col =
-      if col >= 9
-      then true
-      else
-        let numbers =
-          List.init 9 (fun row ->
-              match board.(row).(col) with
-              | Empty -> 0
-              | Fixed n | Mutable n -> n)
-        in
-        if is_valid_set numbers then check_col (col + 1) else false
-    in
-    check_col 0
-  in
-
-  (* Check all 3x3 boxes *)
-  let check_boxes () =
-    let rec check_box box_row box_col =
-      if box_row >= 9
-      then true
-      else if box_col >= 9
-      then check_box (box_row + 3) 0
-      else
-        let numbers =
-          List.init 9 (fun i ->
-              let row = box_row + (i / 3) in
-              let col = box_col + (i mod 3) in
-              match board.(row).(col) with
-              | Empty -> 0
-              | Fixed n | Mutable n -> n)
-        in
-        if is_valid_set numbers then check_box box_row (box_col + 3) else false
-    in
-    check_box 0 0
-  in
-
-  (* Board is solved if all conditions are met and no empty cells *)
-  let no_empty_cells () =
-    not (Array.exists (Array.exists (( = ) Empty)) board)
-  in
-
-  no_empty_cells () && check_rows () && check_columns () && check_boxes ()
-
 let get_game_status board =
-  if is_board_solved board
+  if Board.is_board_solved board
   then
     Some
       "Congratulations! You've solved the Sudoku puzzle correctly! Would you \
