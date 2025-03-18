@@ -1,3 +1,3 @@
 (test
- (name test_Soduku_OCaml)
- (libraries alcotest Soduku_OCaml))
+ (name test_Sudoku_OCaml)
+ (libraries alcotest Sudoku_OCaml))

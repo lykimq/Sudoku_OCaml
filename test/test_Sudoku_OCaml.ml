@@ -1,4 +1,4 @@
-open Soduku_OCaml
+open Sudoku_OCaml
 open Board
 open Alcotest
 

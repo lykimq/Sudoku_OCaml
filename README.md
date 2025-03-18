@@ -78,6 +78,11 @@ dune exec bin/main.exe
 make sudoku
 ```
 
+## Debug
+```bash
+dune build && dune exec _build/default/bin/main.exe
+```
+
 ## Game Controls
 
 - **Mouse**: Click to select cells

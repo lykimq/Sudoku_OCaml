@@ -7,3 +7,4 @@ val start_ui :
 
 val update_board : Board.t -> unit
 val refresh_display : unit -> unit
+val reset_game_state : unit -> unit

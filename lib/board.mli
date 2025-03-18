@@ -9,6 +9,9 @@ val total_size: int
 
 val error_color: float * float * float
 
+val cell_size: float
+val margin: float
+
 val create : unit -> t
 
 val draw_board : Cairo.context -> t -> (int * int) option -> unit
@@ -27,9 +30,9 @@ val clear_invalid : row:int -> col:int -> unit
 
 val is_invalid : row:int -> col:int -> bool
 
-val draw_hints :  Cairo.context -> int list array array -> unit
+val is_empty : cell -> bool
 
-val filter_hints : t -> int list array array -> int list array array
+val is_fixed : cell -> bool
 
 val is_full : t -> bool
 

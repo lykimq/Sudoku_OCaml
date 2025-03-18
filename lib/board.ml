@@ -15,7 +15,7 @@ let fixed_color = (0., 0., 0.)
 let mutable_color = (0., 0., 1.) (* blue *)
 let selected_color = (0.8, 0.8, 0.1) (* yellow *)
 let error_color = (1., 0.2, 0.2) (* red *)
-let hint_color = (0.5, 0.5, 0.5) (* gray color for hints *)
+
 
 (* GTK+ related constants *)
 let cell_size = 60.0
@@ -23,7 +23,7 @@ let board_size = 9. *. cell_size
 let margin = 20.0
 let total_size = int_of_float (board_size +. (2.0 *. margin))
 
-(* Invalid cells *)
+(* Using Hashtbl to store invalid cells instead of maintaining a full board *)
 let invalid_cells = Hashtbl.create 81
 let mark_invalid ~row ~col = Hashtbl.replace invalid_cells (row, col) Invalid
 let clear_invalid ~row ~col = Hashtbl.remove invalid_cells (row, col)
@@ -157,55 +157,8 @@ let pp fmt board =
   done ;
   Format.fprintf fmt "@]"
 
-(* Draw hint number *)
-let draw_hint_number ctxt x y n i hint_size =
-  let hint_row = i / 3 in
-  let hint_col = i mod 3 in
-  let hint_x = x +. (float_of_int hint_col *. cell_size /. 3.) +. 5. in
-  let hint_y = y +. (float_of_int hint_row *. cell_size /. 3.) +. 15. in
-  Cairo.move_to ctxt hint_x hint_y ;
-  Cairo.set_font_size ctxt (float_of_int hint_size) ;
-  Cairo.show_text ctxt (string_of_int n)
-
-(* Draw hints *)
-let draw_hints cr (hints : int list array array) =
-  (* Make hints much smaller - 20% of cell size *)
-  let hint_size = int_of_float (cell_size *. 0.2) in
-  (* Set hint color *)
-  let r, g, b = hint_color in
-  Cairo.set_source_rgb cr r g b ;
-  Cairo.select_font_face cr "Sans" ~weight:Cairo.Normal ;
-
-  Array.iteri
-    (fun row row_array ->
-      Array.iteri
-        (fun col hints ->
-          if hints <> []
-          then
-            let x = margin +. (float_of_int col *. cell_size) in
-            let y = margin +. (float_of_int row *. cell_size) in
-            (* Draw each possible number in a grid within the cell *)
-            List.iteri (fun i n -> draw_hint_number cr x y n i hint_size) hints)
-        row_array)
-    hints
-
 let is_empty cell = match cell with Empty -> true | _ -> false
 let is_fixed cell = match cell with Fixed _ -> true | _ -> false
-
-(* Helper function to filter hints *)
-let filter_hints original_board (hints_board : int list array array) :
-    int list array array =
-  Array.mapi
-    (fun row row_array ->
-      Array.mapi
-        (fun col value ->
-          if
-            is_empty original_board.(row).(col)
-            && not (is_fixed original_board.(row).(col))
-          then value
-          else [])
-        row_array)
-    hints_board
 
 (* Helper function to check if a number exists in given range *)
 let value_in_row board ~row ~value =

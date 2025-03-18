@@ -1,3 +1,4 @@
 (library
- (name Soduku_OCaml)
- (libraries lablgtk3 cairo2 cairo2-gtk))
+ (name Sudoku_OCaml)
+ (libraries lablgtk3 cairo2 cairo2-gtk)
+ (modules Board Solve Hints Generate_board Ui))

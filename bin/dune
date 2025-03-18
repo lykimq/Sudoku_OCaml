@@ -1,4 +1,4 @@
 (executable
- (public_name Soduku_OCaml)
+ (public_name Sudoku_OCaml)
  (name main)
- (libraries Soduku_OCaml lablgtk3 cairo2 cairo2-gtk))
+ (libraries Sudoku_OCaml lablgtk3 cairo2 cairo2-gtk))
