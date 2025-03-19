@@ -70,8 +70,7 @@ let is_board_solved board =
       if !rows_valid
       then begin
         let valid = check_set board.(row) in
-        Ui_debug.debug "Row %d valid: %b\n" row valid ;
-        flush stdout ;
+        (*Ui_debug.debug "Row %d valid: %b\n" row valid ; flush stdout ;*)
         rows_valid := valid
       end
     done ;
@@ -83,8 +82,7 @@ let is_board_solved board =
       then begin
         let column = Array.init 9 (fun row -> board.(row).(col)) in
         let valid = check_set column in
-        Ui_debug.debug "Column %d valid: %b\n" col valid ;
-        flush stdout ;
+        (*Ui_debug.debug "Column %d valid: %b\n" col valid ; flush stdout ;*)
         cols_valid := valid
       end
     done ;
@@ -102,8 +100,8 @@ let is_board_solved board =
                 board.(r).(c))
           in
           let valid = check_set box_values in
-          Ui_debug.debug "Box %d,%d valid: %b\n" box_row box_col valid ;
-          flush stdout ;
+          (*Ui_debug.debug "Box %d,%d valid: %b\n" box_row box_col valid ; flush
+            stdout ;*)
           boxes_valid := valid
         end
       done

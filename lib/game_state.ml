@@ -23,26 +23,35 @@ let check_game_completion board =
 
   try
     match get_game_status board with
-    | Complete message ->
+    | Complete message -> (
         Ui_debug.debug "Game completed: %s\n" message ;
         flush stdout ;
         let dialog =
-          GWindow.message_dialog ~message ~message_type:`INFO
-            ~buttons:GWindow.Buttons.ok ~title:"Game Complete" ()
+          GWindow.message_dialog ~message ~message_type:`QUESTION
+            ~buttons:GWindow.Buttons.yes_no ~title:"Game Complete" ()
         in
         Ui_debug.debug "Showing completion dialog\n" ;
         flush stdout ;
         dialog#show () ;
         let response = dialog#run () in
         Ui_debug.debug "Dialog response: %s\n"
-          (match response with `OK -> "OK" | `DELETE_EVENT -> "DELETE_EVENT") ;
+          (match response with
+          | `YES -> "YES"
+          | `NO -> "NO"
+          | `DELETE_EVENT -> "DELETE_EVENT") ;
         flush stdout ;
         dialog#destroy () ;
         Ui_debug.debug "Dialog closed\n" ;
-        flush stdout
+        flush stdout ;
+        (* Return true if user wants to start a new game, false otherwise *)
+        match response with
+        | `YES -> true
+        | `NO | `DELETE_EVENT -> false)
     | InProgress ->
         Ui_debug.debug "Game in progress\n" ;
-        flush stdout
+        flush stdout ;
+        false
   with e ->
     Ui_debug.debug "Error in game completion check: %s\n" (Printexc.to_string e) ;
-    flush stdout
+    flush stdout ;
+    false

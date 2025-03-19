@@ -49,7 +49,16 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                 (* Request a redraw of the drawing area *)
                 GtkBase.Widget.queue_draw drawing_area#as_widget ;
                 (* Check for game completion after a valid move *)
-                Game_state.check_game_completion !board_ref
+                if Game_state.check_game_completion !board_ref
+                then begin
+                  (* If user wants to start a new game *)
+                  Ui_state.reset_game_state () ;
+                  board_ref :=
+                    Board.of_array
+                      (Generate_board.generate_random_board
+                         ~difficulty:Generate_board.Easy ()) ;
+                  GtkBase.Widget.queue_draw drawing_area#as_widget
+                end
             | None -> Ui_debug.debug "Failed to update cell\n") ;
             true
         (* Case 3: No valid selection or key handler result *)

@@ -229,7 +229,7 @@ let test_game_completion_dialog () =
   in
   (* Test that check_game_completion doesn't raise any exceptions *)
   try
-    Game_state.check_game_completion board ;
+    let _ = Game_state.check_game_completion board in
     check bool "Game completion dialog" true true
   with _e -> check bool "Game completion dialog error" false true
 
