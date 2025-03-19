@@ -38,6 +38,7 @@ A Sudoku game implementation in OCaml with a GTK-based graphical user interface.
 - OPAM (OCaml Package Manager)
 - GTK3 development libraries
 - Cairo graphics library
+- Cairo2-Gtk integration between Cairo and GTK
 - Dune build system
 
 ## Installation
@@ -93,20 +94,3 @@ dune build && dune exec _build/default/bin/main.exe
   - Difficulty Selection: Choose puzzle difficulty
   - Show Hints: Toggle display of possible numbers
   - Quit: Exit the game
-
-## Project Structure
-
-![Project Structure](docs/images/structure.png)
-
-```
-Sudoku_OCaml/
-├── bin/
-│   └── main.ml           # Main entry point
-├── lib/
-│   ├── board.ml          # Board data structure and rendering
-│   ├── generate_board.ml # Puzzle generation
-│   ├── solve.ml          # Game logic and validation
-│   └── ui.ml             # User interface
-└── test/
-    └── test_Soduku_OCaml.ml  # Test suite
-```
