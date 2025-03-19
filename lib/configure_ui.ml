@@ -1,4 +1,3 @@
-
 (* Colors *)
 let background_color = (1., 1., 1.) (* white *)
 let grid_color = (0., 0., 0.) (* black *)

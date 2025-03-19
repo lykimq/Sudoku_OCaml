@@ -88,6 +88,26 @@ let draw_board (ctx : Cairo.context) board selected =
   (* Draw grid *)
   draw_grid ctx
 
+(* Draw the board with hints *)
+let draw_board_with_hints drawing_area board_ref =
+  drawing_area#event#connect#expose ~callback:(fun _ev ->
+      let ctxt = Cairo_gtk.create drawing_area#misc#window in
+      (* Draw the main board *)
+      draw_board ctxt !board_ref !Ui_state.selected ;
+      (* Draw the hints if the show hints option is on *)
+      if !Ui_state.show_hints
+      then begin
+        (* If the hints are empty, compute them *)
+        if
+          Array.for_all
+            (Array.for_all (fun x -> x = []))
+            !Ui_state.current_hints
+        then Ui_state.current_hints := Hints.compute_all_hints !board_ref ;
+        (* Draw the hints *)
+        Hints.draw_hints ctxt !Ui_state.current_hints
+      end ;
+      true)
+
 (* Convert screen position to board position *)
 let screen_to_board_pos x y =
   let fx = float_of_int x in

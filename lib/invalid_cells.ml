@@ -1,8 +1,8 @@
 (* Type for invalid cell state *)
-type cell_state = | Invalid
+type cell_state = Invalid
 
 (* Using Hashtbl to store invalid cells instead of maintaining a full board *)
-let invalid_cells:  (int * int, cell_state) Hashtbl.t = Hashtbl.create 81
+let invalid_cells : (int * int, cell_state) Hashtbl.t = Hashtbl.create 81
 
 (* Mark a cell as invalid *)
 let mark_invalid ~row ~col = Hashtbl.replace invalid_cells (row, col) Invalid

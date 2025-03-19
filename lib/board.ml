@@ -36,4 +36,3 @@ let pp fmt board =
     Format.fprintf fmt "@,"
   done ;
   Format.fprintf fmt "@]"
-

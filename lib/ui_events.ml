@@ -1,13 +1,8 @@
-open GdkEvent
-open Solve
-open Hints
-open Invalid_cells
-
 (* Key press callback - handles all keyboard input for the game *)
 let handle_key_press window board_ref drawing_area key_press_handler =
   window#event#connect#key_press ~callback:(fun ev ->
       (* Get the key value from the event *)
-      let key = Key.keyval ev in
+      let key = GdkEvent.Key.keyval ev in
       Ui_debug.debug "Key pressed: %d\n" key ;
       Ui_debug.debug "Current selection: %s\n"
         (match !Ui_state.selected with
@@ -20,36 +15,37 @@ let handle_key_press window board_ref drawing_area key_press_handler =
         (* Case 1: Clear cell (key value is 0) *)
         | Some (row, col), Some 0 ->
             Ui_debug.debug "Attempting to clear cell at (%d,%d)\n" row col ;
-            (match clear_cell !board_ref ~row ~col with
+            (match Solve.clear_cell !board_ref ~row ~col with
             | Some new_board ->
                 Ui_debug.debug "Cell cleared successfully\n" ;
                 (* Clear any invalid marking from the cell *)
-                clear_invalid ~row ~col ;
+                Invalid_cells.clear_invalid ~row ~col ;
                 (* Update the board reference with the new state *)
                 board_ref := new_board ;
                 (* Reset hints since the board has changed *)
-                Ui_state.current_hints := clear_all_hints () ;
+                Ui_state.current_hints := Hints.clear_all_hints () ;
                 (* Request a redraw of the drawing area *)
                 GtkBase.Widget.queue_draw drawing_area#as_widget
             | None -> Ui_debug.debug "Failed to clear cell\n") ;
             true
         (* Case 2: Set a value (key value is 1-9) *)
         | Some (row, col), Some value ->
-            Ui_debug.debug "Attempting to set value %d at (%d,%d)\n" value row col ;
-            (match set_cell !board_ref ~row ~col ~value with
+            Ui_debug.debug "Attempting to set value %d at (%d,%d)\n" value row
+              col ;
+            (match Solve.set_cell !board_ref ~row ~col ~value with
             | Some (new_board, is_valid) ->
                 Ui_debug.debug "Cell updated successfully\n" ;
                 (* Update the board reference with the new state *)
                 board_ref := new_board ;
                 (* Reset hints since the board has changed *)
-                Ui_state.current_hints := clear_all_hints () ;
+                Ui_state.current_hints := Hints.clear_all_hints () ;
                 if is_valid
-                then (
+                then
                   (* If the move is valid, clear any invalid marking *)
-                  clear_invalid ~row ~col)
+                  Invalid_cells.clear_invalid ~row ~col
                 else
                   (* If the move is invalid, mark the cell as invalid *)
-                  mark_invalid ~row ~col ;
+                  Invalid_cells.mark_invalid ~row ~col ;
                 (* Request a redraw of the drawing area *)
                 GtkBase.Widget.queue_draw drawing_area#as_widget
             | None -> Ui_debug.debug "Failed to update cell\n") ;
@@ -96,5 +92,3 @@ let handle_mouse_click drawing_area click_handler =
 
       flush stdout ;
       true)
-
-

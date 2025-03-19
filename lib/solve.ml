@@ -1,19 +1,19 @@
 open Board
 
-(* Checks if the given row and column position is within
-    the bounds of a 9x9 Sudoku board. *)
+(* Checks if the given row and column position is within the bounds of a 9x9
+   Sudoku board. *)
 let is_valid_pos row col = row >= 0 && row < 9 && col >= 0 && col < 9
 
-(* Checks if placing the given value at
-    the specified position is valid according to Sudoku rules. *)
+(* Checks if placing the given value at the specified position is valid
+   according to Sudoku rules. *)
 let is_valid_move board ~row ~col ~value =
   value >= 1 && value <= 9
   && (not (Validation_board.value_in_row board ~row ~value))
   && (not (Validation_board.value_in_col board ~col ~value))
   && not (Validation_board.value_in_box board ~row ~col ~value)
 
-(* Returns a list of all valid values (1-9)
-    that can be placed at the specified position according to Sudoku rules. *)
+(* Returns a list of all valid values (1-9) that can be placed at the specified
+   position according to Sudoku rules. *)
 let get_valid_numbers board ~row ~col =
   if not (is_valid_pos row col)
   then []
@@ -29,8 +29,8 @@ let get_valid_numbers board ~row ~col =
                && (not (Validation_board.value_in_col board ~col ~value))
                && not (Validation_board.value_in_box board ~row ~col ~value))
 
-(* Calculates all valid moves for every empty cell on the board.
-    This is useful for providing hints to the player. *)
+(* Calculates all valid moves for every empty cell on the board. This is useful
+   for providing hints to the player. *)
 let get_all_hints board =
   let hints = Array.make_matrix 9 9 [] in
   for row = 0 to 8 do
@@ -40,8 +40,8 @@ let get_all_hints board =
   done ;
   hints
 
-(* Attempts to clear a cell at the specified position.
-    Fixed cells cannot be cleared. *)
+(* Attempts to clear a cell at the specified position. Fixed cells cannot be
+   cleared. *)
 let clear_cell board ~row ~col =
   if not (is_valid_pos row col)
   then None
@@ -53,8 +53,8 @@ let clear_cell board ~row ~col =
         new_board.(row).(col) <- Empty ;
         Some new_board
 
-(* Attempts to set a cell at the specified position
-    to the given value. Fixed cells cannot be modified. *)
+(* Attempts to set a cell at the specified position to the given value. Fixed
+   cells cannot be modified. *)
 let set_cell board ~row ~col ~value =
   if not (is_valid_pos row col)
   then None
@@ -81,10 +81,14 @@ let set_cell board ~row ~col ~value =
 (* Represents the current status of the game *)
 type game_status =
   | InProgress
-  | Complete of string  (* Contains the completion message *)
+  | Complete of string (* Contains the completion message *)
 
-(* Checks if the game has been successfully completed and returns the appropriate status. *)
+(* Checks if the game has been successfully completed and returns the
+   appropriate status. *)
 let get_game_status board =
   if Validation_board.is_board_solved board
-  then Complete "Congratulations! You've solved the Sudoku puzzle correctly! Would you like to start a new game?"
+  then
+    Complete
+      "Congratulations! You've solved the Sudoku puzzle correctly! Would you \
+       like to start a new game?"
   else InProgress

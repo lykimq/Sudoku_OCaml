@@ -14,7 +14,7 @@ let create_menu window board_ref (vbox : GPack.box) =
   let add_difficulty_item label difficulty =
     ignore
       (new_game_factory#add_item label ~callback:(fun () ->
-           Ui_state.reset_game_state ();
+           Ui_state.reset_game_state () ;
            board_ref :=
              Board.of_array
                (Generate_board.generate_random_board ~difficulty ()) ;

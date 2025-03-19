@@ -1,18 +1,5 @@
 open GMain
 
-let check_game_completion board =
-  match Solve.get_game_status board with
-  | Solve.Complete message ->
-      let dialog =
-        GWindow.message_dialog
-          ~message
-          ~message_type:`INFO ~buttons:GWindow.Buttons.ok ~title:"Game Complete"
-          ()
-      in
-      ignore (dialog#run ()) ;
-      dialog#destroy ()
-  | Solve.InProgress -> ()
-
 let create_window board_ref ~key_press_handler ~click_handler =
   (* Create window *)
   let padding = 40 in
@@ -33,7 +20,8 @@ let create_window board_ref ~key_press_handler ~click_handler =
 
   (* Drawing area *)
   let drawing_area =
-    GMisc.drawing_area ~width:Configure_ui.total_size ~height:Configure_ui.total_size
+    GMisc.drawing_area ~width:Configure_ui.total_size
+      ~height:Configure_ui.total_size
       ~packing:(vbox#pack ~expand:true ~fill:true)
       ()
   in
@@ -50,32 +38,21 @@ let create_window board_ref ~key_press_handler ~click_handler =
   in
 
   (* Drawing callback *)
-  let _ =
-    drawing_area#event#connect#expose ~callback:(fun _ ->
-        let ctxt = Cairo_gtk.create drawing_area#misc#window in
-        (* Draw the main board *)
-        Ui_board.draw_board ctxt !board_ref !Ui_state.selected ;
-        (* Draw the hints if the show hints option is on *)
-        if !Ui_state.show_hints then
-          begin
-            (* If the hints are empty, compute them *)
-            if Array.for_all (Array.for_all (fun x -> x = [])) !Ui_state.current_hints then
-              Ui_state.current_hints := Hints.compute_all_hints !board_ref;
-            (* Draw the hints *)
-            Hints.draw_hints ctxt !Ui_state.current_hints
-          end;
-        true)
-  in
+  let _ = Ui_board.draw_board_with_hints drawing_area board_ref in
 
   (* Mouse click callback *)
-  let _ = Ui_events.handle_mouse_click drawing_area click_handler in
+  let _ = ignore (Ui_events.handle_mouse_click drawing_area click_handler) in
 
   (* Make sure drawing area can receive mouse events *)
   drawing_area#event#add [`BUTTON_PRESS] ;
   drawing_area#misc#set_can_focus true ;
 
   (* Key press callback - handles all keyboard input for the game *)
-  let _ = Ui_events.handle_key_press window board_ref drawing_area key_press_handler in
+  let _ =
+    ignore
+      (Ui_events.handle_key_press window board_ref drawing_area
+         key_press_handler)
+  in
 
   window
 
@@ -84,7 +61,7 @@ let start_ui ?(debug = false) ?(key_press_handler = fun _ -> None)
   Ui_debug.debug_mode := debug ;
   let _ = GMain.init () in
   let board = ref (Board.of_array initial_board) in
-  Ui_state.reset_game_state ();
+  Ui_state.reset_game_state () ;
   let window = create_window board ~key_press_handler ~click_handler in
   window#show () ;
   GMain.main ()
