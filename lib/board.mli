@@ -34,9 +34,9 @@ val is_empty : cell -> bool
 
 val is_fixed : cell -> bool
 
-val is_full : t -> bool
+(*val is_full : t -> bool
 
-val is_valid : t -> bool
+val is_valid : t -> bool*)
 
 val is_valid_number : t -> int -> int -> int -> bool
 

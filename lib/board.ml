@@ -201,116 +201,70 @@ let value_in_box board ~row ~col ~value =
   in
   check_box box_row box_col
 
-(* Helper function to check if a number is valid in a cell *)
+(* Check if a row, column, or box contains all digits 1-9 without allocating lists *)
+let is_valid_set_cells arr =
+  let seen = Array.make 10 false in
+  let valid = ref true in
+  Array.iter (function
+    | Fixed n | Mutable n when n >= 1 && n <= 9 ->
+        if seen.(n) then valid := false else seen.(n) <- true
+    | _ -> valid := false
+  ) arr;
+  !valid
+
+(* Check if a number exists in a row *)
+let number_in_row board row num =
+  Array.exists (fun cell -> match cell with Fixed n | Mutable n when n = num -> true | _ -> false) board.(row)
+
+(* Check if a number exists in a column *)
+let number_in_col board col num =
+  Array.exists (fun row -> match row.(col) with Fixed n | Mutable n when n = num -> true | _ -> false) board
+
+(* Check if a number exists in a 3x3 box *)
+let number_in_box board row col num =
+  let start_row, start_col = (row / 3) * 3, (col / 3) * 3 in
+  let exists = ref false in
+  for r = start_row to start_row + 2 do
+    for c = start_col to start_col + 2 do
+      match board.(r).(c) with
+      | Fixed n | Mutable n when n = num -> exists := true
+      | _ -> ()
+    done
+  done;
+  !exists
+
+(* Check if a number is valid in a cell *)
 let is_valid_number board row col num =
-  (* Check row *)
-  let valid_in_row = not (value_in_row board ~row ~value:num) in
-  (* Check column *)
-  let valid_in_column = not (value_in_col board ~col ~value:num) in
-  (* Check 3x3 box *)
-  let valid_in_box = not (value_in_box board ~row ~col ~value:num) in
-  valid_in_row && valid_in_column && valid_in_box
+  num >= 1 && num <= 9 &&
+  not (number_in_row board row num) &&
+  not (number_in_col board col num) &&
+  not (number_in_box board row col num)
 
-(* Helper function to check if a board is valid *)
-let is_valid board =
-  let valid_cell row col =
-    match board.(row).(col) with
-    | Empty -> true
-    | Fixed n | Mutable n -> is_valid_number board row col n
-  in
-  let rec check_all_cells row col =
-    if row >= 9
-    then true
-    else if col >= 9
-    then check_all_cells (row + 1) 0
-    else if valid_cell row col
-    then check_all_cells row (col + 1)
-    else false
-  in
-  check_all_cells 0 0
-
-(* Helper function to check if a board is full *)
-let is_full board =
-  let rec check_all_cells row col =
-    if row >= 9
-    then true
-    else if col >= 9
-    then check_all_cells (row + 1) 0
+(* Optimized function to check if the board is solved *)
+  let is_board_solved board =
+    (* Quick fail: If any cell is empty, board is not solved *)
+    if Array.exists (Array.exists ((=) Empty)) board then false
     else
-      match board.(row).(col) with
-      | Empty -> false
-      | _ -> check_all_cells row (col + 1)
-  in
-  check_all_cells 0 0
-
-(* Helper function to check if a board is solved: - Check if there are no empty
-   cells - Verifies each row and column contains numbers 1-9 - Verifies each 3x3
-   box contains numbers 1-9 *)
-let is_board_solved board =
-  (* Check if a set of numbers contains all digits 1-9 *)
-  let is_valid_set numbers =
-    let sorted = List.sort compare numbers in
-    sorted = [1; 2; 3; 4; 5; 6; 7; 8; 9]
-  in
-
-  (* Check all rows contains numbers 1-9 *)
-  let check_rows () =
-    let rec check_row row =
-      if row >= 9
-      then true
-      else
-        let numbers =
-          List.init 9 (fun col ->
-              match board.(row).(col) with
-              | Empty -> 0
-              | Fixed n | Mutable n -> n)
-        in
-        if is_valid_set numbers then check_row (row + 1) else false
-    in
-    check_row 0
-  in
-
-  (* Check all columns contains numbers 1-9 *)
-  let check_columns () =
-    let rec check_col col =
-      if col >= 9
-      then true
-      else
-        let numbers =
-          List.init 9 (fun row ->
-              match board.(row).(col) with
-              | Empty -> 0
-              | Fixed n | Mutable n -> n)
-        in
-        if is_valid_set numbers then check_col (col + 1) else false
-    in
-    check_col 0
-  in
-
-  (* Check all 3x3 boxes contains numbers 1-9 *)
-  let check_boxes () =
-    let rec check_box box_row box_col =
-      if box_row >= 9
-      then true
-      else if box_col >= 9
-      then check_box (box_row + 3) 0
-      else
-        let numbers =
-          List.init 9 (fun i ->
-              let row = box_row + (i / 3) in
-              let col = box_col + (i mod 3) in
-              match board.(row).(col) with
-              | Empty -> 0
-              | Fixed n | Mutable n -> n)
-        in
-        if is_valid_set numbers then check_box box_row (box_col + 3) else false
-    in
-    check_box 0 0
-  in
-
-  (* Board is solved if all conditions are met and no empty cells *)
-  let no_empty_cells () =
-    not (Array.exists (Array.exists (( = ) Empty)) board)
-  in
-
-  no_empty_cells () && check_rows () && check_columns () && check_boxes ()
+      (* Check all rows *)
+      let rec check_rows row =
+        row > 8 || (is_valid_set_cells board.(row) && check_rows (row + 1))
+      in
+      check_rows 0 &&
+      (* Check all columns *)
+      let rec check_cols col =
+        col > 8 || (is_valid_set_cells (Array.init 9 (fun row -> board.(row).(col))) && check_cols (col + 1))
+      in
+      check_cols 0 &&
+      (* Check all 3x3 boxes *)
+      let rec check_boxes box_row box_col =
+        if box_row > 2 then true
+        else if box_col > 2 then check_boxes (box_row + 1) 0
+        else
+          let box_values = Array.init 9 (fun i ->
+            let r = box_row * 3 + (i / 3) in
+            let c = box_col * 3 + (i mod 3) in
+            board.(r).(c)
+          ) in
+          is_valid_set_cells box_values && check_boxes box_row (box_col + 1)
+      in
+      check_boxes 0 0
