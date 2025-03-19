@@ -17,6 +17,6 @@ let () =
         | _ -> None)
   in
 
-  let click_handler _x _y = Ui.refresh_display () in
+  let click_handler _x _y = Ui_state.refresh_display () in
 
   Ui.start_ui ~debug:true ~key_press_handler ~click_handler board

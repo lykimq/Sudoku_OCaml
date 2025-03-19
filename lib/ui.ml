@@ -1,88 +1,5 @@
 open GMain
 
-let debug_mode = ref false
-
-let debug fmt =
-  if !debug_mode
-  then
-    Printf.ksprintf
-      (fun s ->
-        Printf.printf "%s\n" s ;
-        flush stdout)
-      fmt
-  else Printf.ksprintf (fun _ -> ()) fmt
-
-(* The current board. *)
-let current_board = ref (Board.create ())
-(* The current drawing area. *)
-let current_drawing_area = ref None
-(* The currently selected cell on the board.  *)
-let selected = ref None
-(* Whether to show hints on the board. *)
-let show_hints = ref false
-(* The current hints on the board. *)
-let current_hints = ref (Hints.clear_all_hints ())
-
-(* Updates the current board and resets the hints. *)
-let update_board new_board =
-  current_board := new_board ;
-  current_hints := Hints.clear_all_hints ();
-  match !current_drawing_area with
-  | Some drawing_area -> GtkBase.Widget.queue_draw drawing_area#as_widget
-  | None -> ()
-
-(* Refreshes the display of the current drawing area. *)
-let refresh_display () =
-  match !current_drawing_area with
-  | Some area -> GtkBase.Widget.queue_draw area#as_widget
-  | None -> ()
-
-(* Resets the game state to its initial state. *)
-let reset_game_state () =
-  selected := None;
-  show_hints := false;
-  current_hints := Hints.clear_all_hints ();
-  debug "Game state reset: hints cleared and disabled, selection removed"
-
-let create_menu window board_ref (vbox : GPack.box) =
-  let menubar = GMenu.menu_bar ~packing:vbox#pack () in
-
-  (* Create game menu *)
-  let factory = new GMenu.factory menubar in
-  let game_menu = factory#add_submenu "Game" in
-  let game_factory = new GMenu.factory game_menu in
-
-  (* Create submenu items *)
-  let new_game_menu = game_factory#add_submenu "New Game" in
-  let new_game_factory = new GMenu.factory new_game_menu in
-
-  (* Add difficulty options *)
-  let add_difficulty_item label difficulty =
-    ignore
-      (new_game_factory#add_item label ~callback:(fun () ->
-           reset_game_state ();
-           board_ref :=
-             Board.of_array
-               (Generate_board.generate_random_board ~difficulty ()) ;
-           GtkBase.Widget.queue_draw window#as_widget))
-  in
-
-  add_difficulty_item "Easy" Generate_board.Easy ;
-  add_difficulty_item "Medium" Generate_board.Medium ;
-  add_difficulty_item "Hard" Generate_board.Hard ;
-
-  (* Add hint toggle *)
-  ignore (game_factory#add_separator ()) ;
-  ignore
-    (game_factory#add_item "Show Hints" ~callback:(fun _menuitem ->
-         show_hints := not !show_hints ;
-         refresh_display ())) ;
-
-  (* Add menu items to game menu *)
-  ignore (game_factory#add_separator ()) ;
-  ignore (game_factory#add_item "Quit" ~callback:quit)
-
-
 let check_game_completion board =
   match Solve.get_game_status board with
   | Solve.Complete message ->
@@ -101,29 +18,29 @@ let create_window board_ref ~key_press_handler ~click_handler =
   let padding = 40 in
   let window =
     GWindow.window ~title:"Sudoku"
-      ~width:(Ui_board.total_size + padding)
-      ~height:(Ui_board.total_size + padding)
+      ~width:(Configure_ui.total_size + padding)
+      ~height:(Configure_ui.total_size + padding)
       ~resizable:true ()
   in
 
   let vbox = GPack.vbox ~packing:window#add () in
 
   (* Add menu *)
-  create_menu window board_ref vbox ;
+  Ui_menu.create_menu window board_ref vbox ;
 
   (* Handle window close *)
   let _ = window#connect#destroy ~callback:quit in
 
   (* Drawing area *)
   let drawing_area =
-    GMisc.drawing_area ~width:Ui_board.total_size ~height:Ui_board.total_size
+    GMisc.drawing_area ~width:Configure_ui.total_size ~height:Configure_ui.total_size
       ~packing:(vbox#pack ~expand:true ~fill:true)
       ()
   in
 
   (* Store drawing area reference for global access *)
-  current_drawing_area := Some drawing_area ;
-  current_board := !board_ref ;
+  Ui_state.current_drawing_area := Some drawing_area ;
+  Ui_state.current_board := !board_ref ;
 
   (* Handle window resize *)
   let _ =
@@ -137,15 +54,15 @@ let create_window board_ref ~key_press_handler ~click_handler =
     drawing_area#event#connect#expose ~callback:(fun _ ->
         let ctxt = Cairo_gtk.create drawing_area#misc#window in
         (* Draw the main board *)
-        Ui_board.draw_board ctxt !board_ref !selected ;
+        Ui_board.draw_board ctxt !board_ref !Ui_state.selected ;
         (* Draw the hints if the show hints option is on *)
-        if !show_hints then
+        if !Ui_state.show_hints then
           begin
             (* If the hints are empty, compute them *)
-            if Array.for_all (Array.for_all (fun x -> x = [])) !current_hints then
-              current_hints := Hints.compute_all_hints !board_ref;
+            if Array.for_all (Array.for_all (fun x -> x = [])) !Ui_state.current_hints then
+              Ui_state.current_hints := Hints.compute_all_hints !board_ref;
             (* Draw the hints *)
-            Hints.draw_hints ctxt !current_hints
+            Hints.draw_hints ctxt !Ui_state.current_hints
           end;
         true)
   in
@@ -155,24 +72,24 @@ let create_window board_ref ~key_press_handler ~click_handler =
     drawing_area#event#connect#button_press ~callback:(fun ev ->
         let x = int_of_float (GdkEvent.Button.x ev) in
         let y = int_of_float (GdkEvent.Button.y ev) in
-        debug "Raw click at (x=%d, y=%d)\n" x y ;
+        Ui_debug.debug "Raw click at (x=%d, y=%d)\n" x y ;
 
         (* Add event button check *)
         let button = GdkEvent.Button.button ev in
-        debug "Mouse button: %d\n" button ;
+        Ui_debug.debug "Mouse button: %d\n" button ;
 
         (* Make sure we're only handling left clicks *)
         if button = 1
         then begin
           let pos = Ui_board.screen_to_board_pos x y in
-          debug "Converting to board position: %s\n"
+          Ui_debug.debug "Converting to board position: %s\n"
             (match pos with
             | Some (row, col) -> Printf.sprintf "(%d,%d)" row col
             | None -> "None") ;
 
-          selected := pos ;
-          debug "Updated selected cell to: %s\n"
-            (match !selected with
+          Ui_state.selected := pos ;
+          Ui_debug.debug "Updated selected cell to: %s\n"
+            (match !Ui_state.selected with
             | Some (row, col) -> Printf.sprintf "(%d,%d)" row col
             | None -> "None") ;
 
@@ -193,43 +110,43 @@ let create_window board_ref ~key_press_handler ~click_handler =
     window#event#connect#key_press ~callback:(fun ev ->
         (* Get the key value from the event *)
         let key = GdkEvent.Key.keyval ev in
-        debug "Key pressed: %d\n" key ;
-        debug "Current selection: %s\n"
-          (match !selected with
+        Ui_debug.debug "Key pressed: %d\n" key ;
+        Ui_debug.debug "Current selection: %s\n"
+          (match !Ui_state.selected with
           | Some (row, col) -> Printf.sprintf "(%d,%d)" row col
           | None -> "None") ;
 
         (* Process the key press based on current selection and key value *)
         let result =
-          match (!selected, key_press_handler key) with
+          match (!Ui_state.selected, key_press_handler key) with
           (* Case 1: Clear cell (key value is 0) *)
           | Some (row, col), Some 0 ->
-              debug "Attempting to clear cell at (%d,%d)\n" row col ;
+              Ui_debug.debug "Attempting to clear cell at (%d,%d)\n" row col ;
               (match Solve.clear_cell !board_ref ~row ~col with
               | Some new_board ->
-                  debug "Cell cleared successfully\n" ;
+                  Ui_debug.debug "Cell cleared successfully\n" ;
                   (* Clear any invalid marking from the cell *)
                   Invalid_cells.clear_invalid ~row ~col ;
                   (* Update the board reference with the new state *)
                   board_ref := new_board ;
                   (* Reset hints since the board has changed *)
-                  current_hints := Hints.clear_all_hints () ;
+                  Ui_state.current_hints := Hints.clear_all_hints () ;
                   (* Check if the game is complete after clearing *)
                   check_game_completion !board_ref ;
                   (* Request a redraw of the drawing area *)
                   GtkBase.Widget.queue_draw drawing_area#as_widget
-              | None -> debug "Failed to clear cell\n") ;
+              | None -> Ui_debug.debug "Failed to clear cell\n") ;
               true
           (* Case 2: Set a value (key value is 1-9) *)
           | Some (row, col), Some value ->
-              debug "Attempting to set value %d at (%d,%d)\n" value row col ;
+              Ui_debug.debug "Attempting to set value %d at (%d,%d)\n" value row col ;
               (match Solve.set_cell !board_ref ~row ~col ~value with
               | Some (new_board, is_valid) ->
-                  debug "Cell updated successfully\n" ;
+                  Ui_debug.debug "Cell updated successfully\n" ;
                   (* Update the board reference with the new state *)
                   board_ref := new_board ;
                   (* Reset hints since the board has changed *)
-                  current_hints := Hints.clear_all_hints () ;
+                  Ui_state.current_hints := Hints.clear_all_hints () ;
                   if is_valid
                   then (
                     (* If the move is valid, clear any invalid marking *)
@@ -241,11 +158,11 @@ let create_window board_ref ~key_press_handler ~click_handler =
                     Invalid_cells.mark_invalid ~row ~col ;
                   (* Request a redraw of the drawing area *)
                   GtkBase.Widget.queue_draw drawing_area#as_widget
-              | None -> debug "Failed to update cell\n") ;
+              | None -> Ui_debug.debug "Failed to update cell\n") ;
               true
           (* Case 3: No valid selection or key handler result *)
           | _, _ ->
-              debug "No valid selection or key handler result\n" ;
+              Ui_debug.debug "No valid selection or key handler result\n" ;
               false
         in
         (* Ensure debug output is flushed to stdout *)
@@ -258,10 +175,10 @@ let create_window board_ref ~key_press_handler ~click_handler =
 
 let start_ui ?(debug = false) ?(key_press_handler = fun _ -> None)
     ?(click_handler = fun _ _ -> ()) initial_board =
-  debug_mode := debug ;
+  Ui_debug.debug_mode := debug ;
   let _ = GMain.init () in
   let board = ref (Board.of_array initial_board) in
-  reset_game_state ();
+  Ui_state.reset_game_state ();
   let window = create_window board ~key_press_handler ~click_handler in
   window#show () ;
   GMain.main ()
