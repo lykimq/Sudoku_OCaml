@@ -15,7 +15,7 @@ let handle_key_press window board_ref drawing_area key_press_handler =
         (* Case 1: Clear cell (key value is 0) *)
         | Some (row, col), Some 0 ->
             Ui_debug.debug "Attempting to clear cell at (%d,%d)\n" row col ;
-            (match Solve.clear_cell !board_ref ~row ~col with
+            (match Game_logic.clear_cell !board_ref ~row ~col with
             | Some new_board ->
                 Ui_debug.debug "Cell cleared successfully\n" ;
                 (* Clear any invalid marking from the cell *)
@@ -32,7 +32,7 @@ let handle_key_press window board_ref drawing_area key_press_handler =
         | Some (row, col), Some value ->
             Ui_debug.debug "Attempting to set value %d at (%d,%d)\n" value row
               col ;
-            (match Solve.set_cell !board_ref ~row ~col ~value with
+            (match Game_logic.set_cell !board_ref ~row ~col ~value with
             | Some (new_board, is_valid) ->
                 Ui_debug.debug "Cell updated successfully\n" ;
                 (* Update the board reference with the new state *)

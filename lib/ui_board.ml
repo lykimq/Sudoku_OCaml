@@ -104,7 +104,7 @@ let draw_board_with_hints drawing_area board_ref =
             !Ui_state.current_hints
         then Ui_state.current_hints := Hints.compute_all_hints !board_ref ;
         (* Draw the hints *)
-        Hints.draw_hints ctxt !Ui_state.current_hints
+        Ui_hints.draw_hints ctxt !Ui_state.current_hints
       end ;
       true)
 

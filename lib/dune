@@ -1,4 +1,4 @@
 (library
  (name Sudoku_OCaml)
  (libraries lablgtk3 cairo2 cairo2-gtk)
- (modules Ui_events Board Solve Hints Generate_board Ui_main Validation_board Invalid_cells Ui_board Configure_ui Ui_state Ui_debug Ui_menu Rules_board))
+ (modules Ui_events Board Hints Generate_board Ui_main Validation_board Invalid_cells Ui_board Configure_ui Ui_state Ui_debug Ui_menu Rules_board Ui_hints Validation_solve Game_logic))

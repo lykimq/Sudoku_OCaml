@@ -1,8 +1,5 @@
 open Board
 
-(*let is_empty cell = match cell with Empty -> true | _ -> false
-let is_fixed cell = match cell with Fixed _ -> true | _ -> false
-*)
 (* Helper function to check if a number exists in given range *)
 let value_in_row board ~row ~value =
   let rec check col =
