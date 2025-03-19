@@ -17,13 +17,13 @@ let create_menu window board_ref (vbox : GPack.box) =
            Ui_state.reset_game_state () ;
            board_ref :=
              Board.of_array
-               (Generate_board.generate_random_board ~difficulty ()) ;
+               (Board_generate.generate_random_board ~difficulty ()) ;
            GtkBase.Widget.queue_draw window#as_widget))
   in
 
-  add_difficulty_item "Easy" Generate_board.Easy ;
-  add_difficulty_item "Medium" Generate_board.Medium ;
-  add_difficulty_item "Hard" Generate_board.Hard ;
+  add_difficulty_item "Easy" Board_generate.Easy ;
+  add_difficulty_item "Medium" Board_generate.Medium ;
+  add_difficulty_item "Hard" Board_generate.Hard ;
 
   (* Add hint toggle *)
   ignore (game_factory#add_separator ()) ;

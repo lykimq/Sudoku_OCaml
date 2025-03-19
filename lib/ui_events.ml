@@ -15,7 +15,7 @@ let handle_key_press window board_ref drawing_area key_press_handler =
         (* Case 1: Clear cell (key value is 0) *)
         | Some (row, col), Some 0 ->
             Ui_debug.debug "Attempting to clear cell at (%d,%d)\n" row col ;
-            (match Mutation_board.clear_cell !board_ref ~row ~col with
+            (match Board_mutation.clear_cell !board_ref ~row ~col with
             | Some new_board ->
                 Ui_debug.debug "Cell cleared successfully\n" ;
                 (* Clear any invalid marking from the cell *)
@@ -32,7 +32,7 @@ let handle_key_press window board_ref drawing_area key_press_handler =
         | Some (row, col), Some value ->
             Ui_debug.debug "Attempting to set value %d at (%d,%d)\n" value row
               col ;
-            (match Mutation_board.set_cell !board_ref ~row ~col ~value with
+            (match Board_mutation.set_cell !board_ref ~row ~col ~value with
             | Some (new_board, is_valid) ->
                 Ui_debug.debug "Cell updated successfully\n" ;
                 (* Update the board reference with the new state *)
@@ -55,8 +55,8 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                   Ui_state.reset_game_state () ;
                   board_ref :=
                     Board.of_array
-                      (Generate_board.generate_random_board
-                         ~difficulty:Generate_board.Easy ()) ;
+                      (Board_generate.generate_random_board
+                         ~difficulty:Board_generate.Easy ()) ;
                   GtkBase.Widget.queue_draw drawing_area#as_widget
                 end
             | None -> Ui_debug.debug "Failed to update cell\n") ;

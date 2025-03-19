@@ -13,10 +13,10 @@ let draw_hint_number ctxt x y n i hint_size =
   (* Calculate exact x, y coordinates for this hint number, 5. and 15. are the
      padding values *)
   let hint_x =
-    x +. (float_of_int hint_col *. Configure_ui.cell_size /. 3.) +. 5.
+    x +. (float_of_int hint_col *. Ui_config.cell_size /. 3.) +. 5.
   in
   let hint_y =
-    y +. (float_of_int hint_row *. Configure_ui.cell_size /. 3.) +. 15.
+    y +. (float_of_int hint_row *. Ui_config.cell_size /. 3.) +. 15.
   in
 
   (* Position the drawing cursor *)
@@ -34,10 +34,10 @@ let draw_hint_number ctxt x y n i hint_size =
    contains a list of valid numbers for that cell *)
 let draw_hints ctxt (hints : int list array array) =
   (* Make hints much smaller - 20% of cell size *)
-  let hint_size = int_of_float (Configure_ui.cell_size *. 0.2) in
+  let hint_size = int_of_float (Ui_config.cell_size *. 0.2) in
 
   (* Set hint color from predefined hint_color *)
-  let r, g, b = Configure_ui.hint_color in
+  let r, g, b = Ui_config.hint_color in
   Cairo.set_source_rgb ctxt r g b ;
 
   (* Set font face to Sans with normal weight *)
@@ -53,10 +53,10 @@ let draw_hints ctxt (hints : int list array array) =
           then
             (* Calculate the top-left position of this cell *)
             let x =
-              Configure_ui.margin +. (float_of_int col *. Configure_ui.cell_size)
+              Ui_config.margin +. (float_of_int col *. Ui_config.cell_size)
             in
             let y =
-              Configure_ui.margin +. (float_of_int row *. Configure_ui.cell_size)
+              Ui_config.margin +. (float_of_int row *. Ui_config.cell_size)
             in
 
             (* Draw each hint number in its position within the cell *)

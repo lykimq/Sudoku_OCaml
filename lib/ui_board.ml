@@ -1,5 +1,5 @@
 open Board
-open Configure_ui
+open Ui_config
 
 (* Draw background *)
 let drawing_background ctxt color x y =

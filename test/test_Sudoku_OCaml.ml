@@ -16,7 +16,7 @@ let create_board list =
 
 let test_empty_board () =
   let board = create () in
-  check bool "Empty board" false (Rules_board.is_board_solved board)
+  check bool "Empty board" false (Board_rules.is_board_solved board)
 
 let test_solved_board () =
   let board =
@@ -33,7 +33,7 @@ let test_solved_board () =
         [3; 4; 5; 2; 8; 6; 1; 7; 9];
       ]
   in
-  check bool "Valid board solved" true (Rules_board.is_board_solved board)
+  check bool "Valid board solved" true (Board_rules.is_board_solved board)
 
 let test_duplicate_numbers_in_row () =
   let board =
@@ -51,7 +51,7 @@ let test_duplicate_numbers_in_row () =
       ]
   in
   check bool "Duplicate numbers in row" false
-    (Rules_board.is_board_solved board)
+    (Board_rules.is_board_solved board)
 
 let test_duplicate_numbers_in_column () =
   let board =
@@ -69,7 +69,7 @@ let test_duplicate_numbers_in_column () =
       ]
   in
   check bool "Duplicate numbers in column" false
-    (Rules_board.is_board_solved board)
+    (Board_rules.is_board_solved board)
 
 let test_duplicate_numbers_in_box () =
   let board =
@@ -87,7 +87,7 @@ let test_duplicate_numbers_in_box () =
       ]
   in
   check bool "Duplicate numbers in box" false
-    (Rules_board.is_board_solved board)
+    (Board_rules.is_board_solved board)
 
 let test_invalid_range_board () =
   let board =
@@ -104,7 +104,7 @@ let test_invalid_range_board () =
         [3; 4; 5; 2; 8; 6; 1; 7; 10];
       ]
   in
-  check bool "Invalid range board" false (Rules_board.is_board_solved board)
+  check bool "Invalid range board" false (Board_rules.is_board_solved board)
 
 let test_all_same_number_board () =
   let board =
@@ -121,7 +121,7 @@ let test_all_same_number_board () =
         [1; 1; 1; 1; 1; 1; 1; 1; 1];
       ]
   in
-  check bool "All same number board" false (Rules_board.is_board_solved board)
+  check bool "All same number board" false (Board_rules.is_board_solved board)
 
 let test_multiple_empty_cells_board () =
   let board =
@@ -139,7 +139,7 @@ let test_multiple_empty_cells_board () =
       ]
   in
   check bool "Multiple empty cells board" false
-    (Rules_board.is_board_solved board)
+    (Board_rules.is_board_solved board)
 
 let test_game_completion () =
   let board =

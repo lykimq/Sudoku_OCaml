@@ -6,7 +6,7 @@ type game_status =
 (* Checks if the game has been successfully completed and returns the
    appropriate status. *)
 let get_game_status board =
-  let solved = Rules_board.is_board_solved board in
+  let solved = Board_rules.is_board_solved board in
   Ui_debug.debug "Solved: %b\n" solved ;
   flush stdout ;
 

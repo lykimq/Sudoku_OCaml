@@ -5,8 +5,8 @@ let create_window board_ref ~key_press_handler ~click_handler =
   let padding = 40 in
   let window =
     GWindow.window ~title:"Sudoku"
-      ~width:(Configure_ui.total_size + padding)
-      ~height:(Configure_ui.total_size + padding)
+      ~width:(Ui_config.total_size + padding)
+      ~height:(Ui_config.total_size + padding)
       ~resizable:true ()
   in
 
@@ -20,8 +20,7 @@ let create_window board_ref ~key_press_handler ~click_handler =
 
   (* Drawing area *)
   let drawing_area =
-    GMisc.drawing_area ~width:Configure_ui.total_size
-      ~height:Configure_ui.total_size
+    GMisc.drawing_area ~width:Ui_config.total_size ~height:Ui_config.total_size
       ~packing:(vbox#pack ~expand:true ~fill:true)
       ()
   in

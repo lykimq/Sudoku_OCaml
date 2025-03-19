@@ -1,5 +1,5 @@
 open Board
-open Validation_board
+open Board_validation
 
 (* Check if a row, column, or box contains all digits 1-9 without allocating
    lists *)

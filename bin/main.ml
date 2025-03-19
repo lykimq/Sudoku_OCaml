@@ -3,7 +3,7 @@ open Sudoku_OCaml
 let () =
   Random.self_init () ;
   let board =
-    Generate_board.generate_random_board ~difficulty:Generate_board.Easy ()
+    Board_generate.generate_random_board ~difficulty:Board_generate.Easy ()
   in
 
   let key_press_handler key =

@@ -3,7 +3,7 @@ open Board
 (* Attempts to clear a cell at the specified position. Fixed cells cannot be
    cleared. *)
 let clear_cell board ~row ~col =
-  if not (Validation_move.is_valid_pos row col)
+  if not (Game_move.is_valid_pos row col)
   then None
   else
     match board.(row).(col) with
@@ -16,7 +16,7 @@ let clear_cell board ~row ~col =
 (* Attempts to set a cell at the specified position to the given value. Fixed
    cells cannot be modified. *)
 let set_cell board ~row ~col ~value =
-  if not (Validation_move.is_valid_pos row col)
+  if not (Game_move.is_valid_pos row col)
   then None
   else
     match board.(row).(col) with
@@ -26,7 +26,7 @@ let set_cell board ~row ~col ~value =
         let new_board = Array.map Array.copy board in
         new_board.(row).(col) <- Mutable value ;
         (* Check if the move is valid *)
-        if Validation_move.is_valid_move board ~row ~col ~value
+        if Game_move.is_valid_move board ~row ~col ~value
         then (
           (* Clear the invalid mark if the move is valid *)
           Invalid_cells.clear_invalid ~row ~col ;
