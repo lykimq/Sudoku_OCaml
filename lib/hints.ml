@@ -1,4 +1,4 @@
-let hint_color = (0.5, 0.5, 0.5) (* gray color for hints *)
+open Board
 
 (* Draws a single hint number within a specific position in a Sudoku cell.
 
@@ -39,7 +39,7 @@ let draw_hints ctxt (hints : int list array array) =
   let hint_size = int_of_float (Configure_ui.cell_size *. 0.2) in
 
   (* Set hint color from predefined hint_color *)
-  let r, g, b = hint_color in
+  let r, g, b = Configure_ui.hint_color in
   Cairo.set_source_rgb ctxt r g b ;
 
   (* Set font face to Sans with normal weight *)
@@ -76,6 +76,8 @@ let create_empty_hints () = Array.map (fun row -> Array.copy row) empty_hints
 
 (* Creates an empty hint array with no hints shown. *)
 let clear_all_hints () = empty_hints
+let is_empty cell = match cell with Empty -> true | _ -> false
+let is_fixed cell = match cell with Fixed _ -> true | _ -> false
 
 (* Calculates all valid moves for every empty cell on the board. *)
 let compute_all_hints board =
@@ -83,9 +85,7 @@ let compute_all_hints board =
   for row = 0 to 8 do
     for col = 0 to 8 do
       (* Only compute hints for empty, non-fixed cells *)
-      if
-        Validation_board.is_empty board.(row).(col)
-        && not (Validation_board.is_fixed board.(row).(col))
+      if is_empty board.(row).(col) && not (is_fixed board.(row).(col))
       then hints.(row).(col) <- Solve.get_valid_numbers board ~row ~col
     done
   done ;
@@ -101,8 +101,8 @@ let filter_hints original_board (hints_board : int list array array) :
         (fun col _value ->
           (* Clear hints for non-empty or fixed cells *)
           if
-            (not (Validation_board.is_empty original_board.(row).(col)))
-            || Validation_board.is_fixed original_board.(row).(col)
+            (not (is_empty original_board.(row).(col)))
+            || is_fixed original_board.(row).(col)
           then hints_board.(row).(col) <- [])
         row_array)
     hints_board ;

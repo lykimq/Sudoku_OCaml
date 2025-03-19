@@ -5,6 +5,7 @@ let fixed_color = (0., 0., 0.)
 let mutable_color = (0., 0., 1.) (* blue *)
 let selected_color = (0.8, 0.8, 0.1) (* yellow *)
 let error_color = (1., 0.2, 0.2) (* red *)
+let hint_color = (0.5, 0.5, 0.5) (* gray color for hints *)
 
 (* GTK+ related constants *)
 let cell_size = 60.0
