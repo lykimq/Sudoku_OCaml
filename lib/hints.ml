@@ -14,7 +14,7 @@ let is_fixed cell = match cell with Fixed _ -> true | _ -> false
 (* Returns a list of all valid values (1-9) that can be placed at the specified
    position according to Sudoku rules. *)
 let get_valid_numbers board ~row ~col =
-  if not (Validation_solve.is_valid_pos row col)
+  if not (Validation_move.is_valid_pos row col)
   then []
   else
     match board.(row).(col) with

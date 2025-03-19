@@ -47,7 +47,9 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                   (* If the move is invalid, mark the cell as invalid *)
                   Invalid_cells.mark_invalid ~row ~col ;
                 (* Request a redraw of the drawing area *)
-                GtkBase.Widget.queue_draw drawing_area#as_widget
+                GtkBase.Widget.queue_draw drawing_area#as_widget ;
+                (* Check for game completion after a valid move *)
+                Game_state.check_game_completion !board_ref
             | None -> Ui_debug.debug "Failed to update cell\n") ;
             true
         (* Case 3: No valid selection or key handler result *)

@@ -103,7 +103,7 @@ let generate_random_board ?(difficulty = Easy) () =
   (* Remove some numbers to create a puzzle based on difficulty *)
   let cells_to_keep =
     match difficulty with
-    | Easy -> 35 (* keep ~35% cells filled *)
+    | Easy -> 55 (* keep ~35% cells filled *)
     | Medium -> 30 (* keep ~30% cells filled *)
     | Hard -> 25 (* keep ~25% cells filled *)
   in
