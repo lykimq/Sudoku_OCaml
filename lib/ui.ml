@@ -101,8 +101,8 @@ let create_window board_ref ~key_press_handler ~click_handler =
   let padding = 40 in
   let window =
     GWindow.window ~title:"Sudoku"
-      ~width:(Board.total_size + padding)
-      ~height:(Board.total_size + padding)
+      ~width:(Ui_board.total_size + padding)
+      ~height:(Ui_board.total_size + padding)
       ~resizable:true ()
   in
 
@@ -116,7 +116,7 @@ let create_window board_ref ~key_press_handler ~click_handler =
 
   (* Drawing area *)
   let drawing_area =
-    GMisc.drawing_area ~width:Board.total_size ~height:Board.total_size
+    GMisc.drawing_area ~width:Ui_board.total_size ~height:Ui_board.total_size
       ~packing:(vbox#pack ~expand:true ~fill:true)
       ()
   in
@@ -137,7 +137,7 @@ let create_window board_ref ~key_press_handler ~click_handler =
     drawing_area#event#connect#expose ~callback:(fun _ ->
         let ctxt = Cairo_gtk.create drawing_area#misc#window in
         (* Draw the main board *)
-        Board.draw_board ctxt !board_ref !selected ;
+        Ui_board.draw_board ctxt !board_ref !selected ;
         (* Draw the hints if the show hints option is on *)
         if !show_hints then
           begin
@@ -164,7 +164,7 @@ let create_window board_ref ~key_press_handler ~click_handler =
         (* Make sure we're only handling left clicks *)
         if button = 1
         then begin
-          let pos = Board.screen_to_board_pos x y in
+          let pos = Ui_board.screen_to_board_pos x y in
           debug "Converting to board position: %s\n"
             (match pos with
             | Some (row, col) -> Printf.sprintf "(%d,%d)" row col

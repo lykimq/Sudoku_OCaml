@@ -18,8 +18,8 @@ let draw_hint_number ctxt x y n i hint_size =
 
   (* Calculate exact x, y coordinates for this hint number,
     5. and 15. are the padding values *)
-  let hint_x = x +. (float_of_int hint_col *. Board.cell_size /. 3.) +. 5. in
-  let hint_y = y +. (float_of_int hint_row *. Board.cell_size /. 3.) +. 15. in
+  let hint_x = x +. (float_of_int hint_col *. Ui_board.cell_size /. 3.) +. 5. in
+  let hint_y = y +. (float_of_int hint_row *. Ui_board.cell_size /. 3.) +. 15. in
 
   (* Position the drawing cursor *)
   Cairo.move_to ctxt hint_x hint_y ;
@@ -37,7 +37,7 @@ let draw_hint_number ctxt x y n i hint_size =
 *)
 let draw_hints ctxt (hints : int list array array) =
   (* Make hints much smaller - 20% of cell size *)
-  let hint_size = int_of_float (Board.cell_size *. 0.2) in
+  let hint_size = int_of_float (Ui_board.cell_size *. 0.2) in
 
   (* Set hint color from predefined hint_color *)
   let r, g, b = hint_color in
@@ -55,8 +55,8 @@ let draw_hints ctxt (hints : int list array array) =
           if hints <> []
           then
             (* Calculate the top-left position of this cell *)
-            let x = Board.margin +. (float_of_int col *. Board.cell_size) in
-            let y = Board.margin +. (float_of_int row *. Board.cell_size) in
+            let x = Ui_board.margin +. (float_of_int col *. Ui_board.cell_size) in
+            let y = Ui_board.margin +. (float_of_int row *. Ui_board.cell_size) in
 
             (* Draw each hint number in its position within the cell *)
             List.iteri (fun i n -> draw_hint_number ctxt x y n i hint_size) hints)
