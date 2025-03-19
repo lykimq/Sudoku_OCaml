@@ -8,9 +8,9 @@ let is_valid_pos row col = row >= 0 && row < 9 && col >= 0 && col < 9
     the specified position is valid according to Sudoku rules. *)
 let is_valid_move board ~row ~col ~value =
   value >= 1 && value <= 9
-  && (not (Board.value_in_row board ~row ~value))
-  && (not (Board.value_in_col board ~col ~value))
-  && not (Board.value_in_box board ~row ~col ~value)
+  && (not (Validation_board.value_in_row board ~row ~value))
+  && (not (Validation_board.value_in_col board ~col ~value))
+  && not (Validation_board.value_in_box board ~row ~col ~value)
 
 (* Returns a list of all valid values (1-9)
     that can be placed at the specified position according to Sudoku rules. *)
@@ -25,9 +25,9 @@ let get_valid_numbers board ~row ~col =
            row, column, or box *)
         List.init 9 (fun i -> i + 1)
         |> List.filter (fun value ->
-               (not (Board.value_in_row board ~row ~value))
-               && (not (Board.value_in_col board ~col ~value))
-               && not (Board.value_in_box board ~row ~col ~value))
+               (not (Validation_board.value_in_row board ~row ~value))
+               && (not (Validation_board.value_in_col board ~col ~value))
+               && not (Validation_board.value_in_box board ~row ~col ~value))
 
 (* Calculates all valid moves for every empty cell on the board.
     This is useful for providing hints to the player. *)
@@ -69,12 +69,12 @@ let set_cell board ~row ~col ~value =
         if is_valid_move board ~row ~col ~value
         then (
           (* Clear the invalid mark if the move is valid *)
-          Board.clear_invalid ~row ~col ;
+          Invalid_cells.clear_invalid ~row ~col ;
           (* Return the new board and true if the move is valid *)
           Some (new_board, true))
         else (
           (* Mark the cell as invalid if the move is not valid *)
-          Board.mark_invalid ~row ~col ;
+          Invalid_cells.mark_invalid ~row ~col ;
           (* Return the new board and false if the move is not valid *)
           Some (new_board, false))
 
@@ -85,6 +85,6 @@ type game_status =
 
 (* Checks if the game has been successfully completed and returns the appropriate status. *)
 let get_game_status board =
-  if Board.is_board_solved board
+  if Validation_board.is_board_solved board
   then Complete "Congratulations! You've solved the Sudoku puzzle correctly! Would you like to start a new game?"
   else InProgress

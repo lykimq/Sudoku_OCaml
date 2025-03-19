@@ -209,7 +209,7 @@ let create_window board_ref ~key_press_handler ~click_handler =
               | Some new_board ->
                   debug "Cell cleared successfully\n" ;
                   (* Clear any invalid marking from the cell *)
-                  Board.clear_invalid ~row ~col ;
+                  Invalid_cells.clear_invalid ~row ~col ;
                   (* Update the board reference with the new state *)
                   board_ref := new_board ;
                   (* Reset hints since the board has changed *)
@@ -233,12 +233,12 @@ let create_window board_ref ~key_press_handler ~click_handler =
                   if is_valid
                   then (
                     (* If the move is valid, clear any invalid marking *)
-                    Board.clear_invalid ~row ~col ;
+                    Invalid_cells.clear_invalid ~row ~col ;
                     (* Check if the game is complete after the move *)
                     check_game_completion new_board)
                   else
                     (* If the move is invalid, mark the cell as invalid *)
-                    Board.mark_invalid ~row ~col ;
+                    Invalid_cells.mark_invalid ~row ~col ;
                   (* Request a redraw of the drawing area *)
                   GtkBase.Widget.queue_draw drawing_area#as_widget
               | None -> debug "Failed to update cell\n") ;

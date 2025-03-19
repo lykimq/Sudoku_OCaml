@@ -79,7 +79,7 @@ let compute_all_hints board =
   for row = 0 to 8 do
     for col = 0 to 8 do
       (* Only compute hints for empty, non-fixed cells *)
-      if Board.is_empty board.(row).(col) && not (Board.is_fixed board.(row).(col))
+        if Validation_board.is_empty board.(row).(col) && not (Validation_board.is_fixed board.(row).(col))
       then hints.(row).(col) <- Solve.get_valid_numbers board ~row ~col
     done
   done;
@@ -93,7 +93,7 @@ let filter_hints original_board (hints_board : int list array array) : int list 
       Array.iteri
         (fun col _value ->
           (* Clear hints for non-empty or fixed cells *)
-          if not (Board.is_empty original_board.(row).(col)) || Board.is_fixed original_board.(row).(col)
+          if not (Validation_board.is_empty original_board.(row).(col)) || Validation_board.is_fixed original_board.(row).(col)
           then hints_board.(row).(col) <- [])
         row_array)
     hints_board;

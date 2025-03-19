@@ -88,7 +88,7 @@ let generate_random_board ?(difficulty = Easy) () =
       (* Try each number until a valid solution is found *)
       while (not !found) && !i < 9 do
         let num = nums.(!i) in
-        if Board.is_valid_number (Board.of_array board) row col num
+        if Validation_board.is_valid_number (Board.of_array board) row col num
         then (
           board.(row).(col) <- num ;
           if solve row (col + 1) then found := true else board.(row).(col) <- 0) ;
