@@ -41,24 +41,15 @@ let fill_diagonal_box board start_row start_col =
    valid solution 3. Remove a certain number of cells based on the difficulty
    level *)
 let generate_random_board ?(difficulty = Easy) () =
-  Random.self_init () ;
   let board = Array.make_matrix 9 9 0 in
-  let _rng = Random.State.make_self_init () in
+  let rng = Random.State.make_self_init () in
 
   (* Fill diagonal 3x3 boxes *)
-  let fill_diagonal_box start_row start_col =
-    fill_diagonal_box board start_row start_col
-  in
+  let fill_diagonal_box = fill_diagonal_box board in
 
-  (* Fill the diagonal 3x3 boxes: (0,0) (0,3) (0,6) (3,0) (3,3) (3,6) (6,0)
-     (6,3) (6,6) *)
   fill_diagonal_box 0 0 ;
-  (* Top left box *)
   fill_diagonal_box 3 3 ;
-  (* Center Top-left box *)
   fill_diagonal_box 6 6 ;
-
-  (* Bottom Top-left box *)
 
   (* Recursive backtracking algorithm that fills the rest of the board.
 
@@ -79,7 +70,7 @@ let generate_random_board ?(difficulty = Easy) () =
       let nums = Array.init 9 (fun i -> i + 1) in
       (* Shuffle the numbers for randomness *)
       for i = 8 downto 1 do
-        let j = Random.int (i + 1) in
+        let j = Random.State.int rng (i + 1) in
         let temp = nums.(i) in
         nums.(i) <- nums.(j) ;
         nums.(j) <- temp
@@ -112,16 +103,11 @@ let generate_random_board ?(difficulty = Easy) () =
   let removed = ref 0 in
   (* Randomly remove cells until we reach the target difficulty *)
   while !removed < cells_to_remove do
-    let row = Random.int 9 in
-    let col = Random.int 9 in
+    let row = Random.State.int rng 9 in
+    let col = Random.State.int rng 9 in
     if board.(row).(col) <> 0
     then (
       board.(row).(col) <- 0 ;
       incr removed)
   done ;
-
   board
-
-let generate_easy_board () = generate_random_board ~difficulty:Easy ()
-let generate_medium_board () = generate_random_board ~difficulty:Medium ()
-let generate_hard_board () = generate_random_board ~difficulty:Hard ()
