@@ -11,59 +11,82 @@ let handle_key_press window board_ref drawing_area key_press_handler =
 
       (* Process the key press based on current selection and key value *)
       let result =
-        match (!Ui_state.selected, key_press_handler key) with
-        (* Case 1: Clear cell (key value is 0) *)
-        | Some (row, col), Some 0 ->
-            Ui_debug.debug "Attempting to clear cell at (%d,%d)\n" row col ;
-            (match Board_mutation.clear_cell !board_ref ~row ~col with
-            | Some new_board ->
-                Ui_debug.debug "Cell cleared successfully\n" ;
-                (* Clear any invalid marking from the cell *)
-                Invalid_cells.clear_invalid ~row ~col ;
-                (* Update the board reference with the new state *)
-                board_ref := new_board ;
-                (* Reset hints since the board has changed *)
-                Ui_state.current_hints := Hints.clear_all_hints () ;
-                (* Request a redraw of the drawing area *)
-                GtkBase.Widget.queue_draw drawing_area#as_widget
-            | None -> Ui_debug.debug "Failed to clear cell\n") ;
+        match !Ui_state.selected with
+        | Some (row, col) when key = GdkKeysyms._Up ->
+            Ui_debug.debug "Moving selection up\n" ;
+            if row > 0 then Ui_state.selected := Some (row - 1, col) ;
+            GtkBase.Widget.queue_draw drawing_area#as_widget ;
             true
-        (* Case 2: Set a value (key value is 1-9) *)
-        | Some (row, col), Some value ->
-            Ui_debug.debug "Attempting to set value %d at (%d,%d)\n" value row
-              col ;
-            (match Board_mutation.set_cell !board_ref ~row ~col ~value with
-            | Some (new_board, is_valid) ->
-                Ui_debug.debug "Cell updated successfully\n" ;
-                (* Update the board reference with the new state *)
-                board_ref := new_board ;
-                (* Reset hints since the board has changed *)
-                Ui_state.current_hints := Hints.clear_all_hints () ;
-                if is_valid
-                then
-                  (* If the move is valid, clear any invalid marking *)
-                  Invalid_cells.clear_invalid ~row ~col
-                else
-                  (* If the move is invalid, mark the cell as invalid *)
-                  Invalid_cells.mark_invalid ~row ~col ;
-                (* Request a redraw of the drawing area *)
-                GtkBase.Widget.queue_draw drawing_area#as_widget ;
-                (* Check for game completion after a valid move *)
-                if Game_state.check_game_completion !board_ref
-                then begin
-                  (* If user wants to start a new game *)
-                  Ui_state.reset_game_state () ;
-                  board_ref :=
-                    Board.of_array
-                      (Board_generate.generate_random_board
-                         ~difficulty:Board_generate.Easy ()) ;
-                  GtkBase.Widget.queue_draw drawing_area#as_widget
-                end
-            | None -> Ui_debug.debug "Failed to update cell\n") ;
+        | Some (row, col) when key = GdkKeysyms._Down ->
+            Ui_debug.debug "Moving selection down\n" ;
+            if row < 8 then Ui_state.selected := Some (row + 1, col) ;
+            GtkBase.Widget.queue_draw drawing_area#as_widget ;
             true
-        (* Case 3: No valid selection or key handler result *)
-        | _, _ ->
-            Ui_debug.debug "No valid selection or key handler result\n" ;
+        | Some (row, col) when key = GdkKeysyms._Left ->
+            Ui_debug.debug "Moving selection left\n" ;
+            if col > 0 then Ui_state.selected := Some (row, col - 1) ;
+            GtkBase.Widget.queue_draw drawing_area#as_widget ;
+            true
+        | Some (row, col) when key = GdkKeysyms._Right ->
+            Ui_debug.debug "Moving selection right\n" ;
+            if col < 8 then Ui_state.selected := Some (row, col + 1) ;
+            GtkBase.Widget.queue_draw drawing_area#as_widget ;
+            true
+        | Some (row, col) -> (
+            (* Handle numeric keys and other inputs *)
+            match key_press_handler key with
+            | Some 0 ->
+                Ui_debug.debug "Attempting to clear cell at (%d,%d)\n" row col ;
+                (match Board_mutation.clear_cell !board_ref ~row ~col with
+                | Some new_board ->
+                    Ui_debug.debug "Cell cleared successfully\n" ;
+                    (* Clear any invalid marking from the cell *)
+                    Invalid_cells.clear_invalid ~row ~col ;
+                    (* Update the board reference with the new state *)
+                    board_ref := new_board ;
+                    (* Reset hints since the board has changed *)
+                    Ui_state.current_hints := Hints.clear_all_hints () ;
+                    (* Request a redraw of the drawing area *)
+                    GtkBase.Widget.queue_draw drawing_area#as_widget
+                | None -> Ui_debug.debug "Failed to clear cell\n") ;
+                true
+            | Some value ->
+                Ui_debug.debug "Attempting to set value %d at (%d,%d)\n" value
+                  row col ;
+                (match Board_mutation.set_cell !board_ref ~row ~col ~value with
+                | Some (new_board, is_valid) ->
+                    Ui_debug.debug "Cell updated successfully\n" ;
+                    (* Update the board reference with the new state *)
+                    board_ref := new_board ;
+                    (* Reset hints since the board has changed *)
+                    Ui_state.current_hints := Hints.clear_all_hints () ;
+                    if is_valid
+                    then
+                      (* If the move is valid, clear any invalid marking *)
+                      Invalid_cells.clear_invalid ~row ~col
+                    else
+                      (* If the move is invalid, mark the cell as invalid *)
+                      Invalid_cells.mark_invalid ~row ~col ;
+                    (* Request a redraw of the drawing area *)
+                    GtkBase.Widget.queue_draw drawing_area#as_widget ;
+                    (* Check for game completion after a valid move *)
+                    if Game_state.check_game_completion !board_ref
+                    then begin
+                      (* If user wants to start a new game *)
+                      Ui_state.reset_game_state () ;
+                      board_ref :=
+                        Board.of_array
+                          (Board_generate.generate_random_board
+                             ~difficulty:Board_generate.Easy ()) ;
+                      GtkBase.Widget.queue_draw drawing_area#as_widget
+                    end
+                | None -> Ui_debug.debug "Failed to update cell\n") ;
+                true
+            | None ->
+                Ui_debug.debug "No valid key handler result\n" ;
+                false)
+        | None ->
+            Ui_debug.debug "No valid selection\n" ;
             false
       in
       (* Ensure debug output is flushed to stdout *)
