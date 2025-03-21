@@ -40,32 +40,3 @@ let value_in_box board ~row ~col ~value =
       | _ -> check_box r (c + 1)
   in
   check_box box_row box_col
-
-(* Check if a number exists in a row *)
-let number_in_row board row num =
-  Array.exists
-    (fun cell ->
-      match cell with (Fixed n | Mutable n) when n = num -> true | _ -> false)
-    board.(row)
-
-(* Check if a number exists in a column *)
-let number_in_col board col num =
-  Array.exists
-    (fun row ->
-      match row.(col) with
-      | (Fixed n | Mutable n) when n = num -> true
-      | _ -> false)
-    board
-
-(* Check if a number exists in a 3x3 box *)
-let number_in_box board row col num =
-  let start_row, start_col = (row / 3 * 3, col / 3 * 3) in
-  let exists = ref false in
-  for r = start_row to start_row + 2 do
-    for c = start_col to start_col + 2 do
-      match board.(r).(c) with
-      | (Fixed n | Mutable n) when n = num -> exists := true
-      | _ -> ()
-    done
-  done ;
-  !exists

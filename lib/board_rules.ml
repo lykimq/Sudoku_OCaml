@@ -1,5 +1,4 @@
 open Board
-open Board_validation
 
 (* Check if a row, column, or box contains all digits 1-9 without allocating
    lists *)
@@ -37,9 +36,9 @@ let is_valid_set_cells arr =
 (* Check if a number is valid in a cell *)
 let is_valid_number board row col num =
   num >= 1 && num <= 9
-  && (not (number_in_row board row num))
-  && (not (number_in_col board col num))
-  && not (number_in_box board row col num)
+  && (not (Board_validation.value_in_row board ~row ~value:num))
+  && (not (Board_validation.value_in_col board ~col ~value:num))
+  && not (Board_validation.value_in_box board ~row ~col ~value:num)
 
 (* Optimized function to check if the board is solved *)
 let is_board_solved board =
