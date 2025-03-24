@@ -9,3 +9,4 @@ let is_valid_move board ~row ~col ~value =
   && (not (Board_validation.value_in_row board ~row ~value))
   && (not (Board_validation.value_in_col board ~col ~value))
   && not (Board_validation.value_in_box board ~row ~col ~value)
+(* MOVE to board_validation.ml *)
