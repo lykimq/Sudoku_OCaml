@@ -20,6 +20,5 @@
  Invalid_cells
  Hints
 
- Game_move
- Game_state
+  Game_state
  ))

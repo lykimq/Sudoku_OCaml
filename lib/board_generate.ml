@@ -72,7 +72,7 @@ let rec solve board ~row ~col ~rng =
     while (not !found) && !i < 9 do
       (* Get the next number to try *)
       let num = nums.(!i) in
-      if Game_move.is_valid_move board ~row ~col ~value:num
+      if Board_validation.is_valid_move board ~row ~col ~value:num
       then (
         (* Place the number in the current cell *)
         board.(row).(col) <- Fixed num ;

@@ -51,6 +51,16 @@ let value_in_box board ~row ~col ~value =
     (List.init 9 (fun i -> (start_row + (i / 3), start_col + (i mod 3))))
     ~value
 
+let is_valid_pos row col = row >= 0 && row < 9 && col >= 0 && col < 9
+
+(* Checks if placing the given value at the specified position is valid
+   according to Sudoku rules. *)
+let is_valid_move board ~row ~col ~value =
+  value >= 1 && value <= 9
+  && (not (value_in_row board ~row ~value))
+  && (not (value_in_col board ~col ~value))
+  && not (value_in_box board ~row ~col ~value)
+
 (* Checks if the entire board is solved correctly. A board is considered solved
    if: 1. All cells are filled (no Empty cells) 2. All rows are valid 3. All
    columns are valid 4. All 3x3 boxes are valid *)

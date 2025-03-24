@@ -1,7 +1,7 @@
 open Board
 
 let update_cell board ~row ~col ~f =
-  if not (Game_move.is_valid_pos row col)
+  if not (Board_validation.is_valid_pos row col)
   then None
   else
     match board.(row).(col) with
@@ -22,7 +22,7 @@ let set_cell board ~row ~col ~value =
   | None -> None
   | Some new_board ->
       (* Check valid move of the original board *)
-      if Game_move.is_valid_move board ~row ~col ~value
+      if Board_validation.is_valid_move board ~row ~col ~value
       then (
         (* Clear the invalid mark if the move is valid *)
         Invalid_cells.clear_invalid ~row ~col ;
