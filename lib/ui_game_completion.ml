@@ -1,10 +1,6 @@
 open GWindow
 open Ui_debug
 
-(* UI-specific game completion handling *)
-
-(* Shows a completion dialog and returns whether the user wants to start a new
-   game *)
 let show_completion_dialog message =
   debug "Showing completion dialog\n" ;
   flush stdout ;

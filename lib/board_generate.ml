@@ -1,3 +1,5 @@
+open Board
+
 (* Represents the difficulty level of a Sudoku puzzle, which determines how many
    cells will be filled in the final puzzle. *)
 type difficulty =
@@ -38,7 +40,7 @@ let fill_diagonal_box board start_row start_col ~rng =
   let k = ref 0 in
   for i = 0 to 2 do
     for j = 0 to 2 do
-      board.(start_row + i).(start_col + j) <- nums.(!k) ;
+      board.(start_row + i).(start_col + j) <- Fixed nums.(!k) ;
       incr k
     done
   done
@@ -58,7 +60,7 @@ let rec solve board ~row ~col ~rng =
   then true (* Reached end of board - solution found *)
   else if col = 9
   then solve board ~row:(row + 1) ~col:0 ~rng (* Move to next row *)
-  else if board.(row).(col) <> 0 (* Skip filled cells *)
+  else if board.(row).(col) <> Empty (* Skip filled cells *)
   then solve board ~row ~col:(col + 1) ~rng
   else
     (* Try random numbers at this position *)
@@ -70,17 +72,17 @@ let rec solve board ~row ~col ~rng =
     while (not !found) && !i < 9 do
       (* Get the next number to try *)
       let num = nums.(!i) in
-      if Game_move.is_valid_move (Board.of_array board) ~row ~col ~value:num
+      if Game_move.is_valid_move board ~row ~col ~value:num
       then (
         (* Place the number in the current cell *)
-        board.(row).(col) <- num ;
+        board.(row).(col) <- Fixed num ;
         if
           (* Recursively solve the rest of the board *)
           solve board ~row ~col:(col + 1) ~rng
         then found := true
         else
           (* Backtrack if no solution found *)
-          board.(row).(col) <- 0) ;
+          board.(row).(col) <- Empty) ;
       (* Try the next number *)
       incr i
     done ;
@@ -96,7 +98,7 @@ let rec solve board ~row ~col ~rng =
 
    - Remove a certain number of cells based on the difficulty level *)
 let generate_random_board ?(difficulty = Easy) () =
-  let board = Array.make_matrix 9 9 0 in
+  let board = Board.create () in
   let rng = Random.State.make_self_init () in
 
   (* Fill diagonal 3x3 boxes *)
@@ -111,7 +113,7 @@ let generate_random_board ?(difficulty = Easy) () =
   let total_cells = 81 in
   let cells_to_keep =
     match difficulty with
-    | Easy -> 55 (* keep ~55% cells filled *)
+    | Easy -> 70 (* keep ~55% cells filled *)
     | Medium -> 30 (* keep ~30% cells filled *)
     | Hard -> 25 (* keep ~25% cells filled *)
   in
@@ -121,9 +123,10 @@ let generate_random_board ?(difficulty = Easy) () =
   while !removed < cells_to_remove do
     let row = Random.State.int rng 9 in
     let col = Random.State.int rng 9 in
-    if board.(row).(col) <> 0
-    then (
-      board.(row).(col) <- 0 ;
-      incr removed)
+    match board.(row).(col) with
+    | Fixed _ ->
+        board.(row).(col) <- Empty ;
+        incr removed
+    | Empty | Mutable _ -> ()
   done ;
-  board
+  Board.to_array board
