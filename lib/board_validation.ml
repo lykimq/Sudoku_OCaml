@@ -1,73 +1,73 @@
 open Board
 
-let is_valid_set_cells arr =
+(*--------- Types and helpers ------------*)
+type coords = (int * int) list
+
+let cell_value = function Empty -> None | Fixed n | Mutable n -> Some n
+let in_bounds i = i >= 0 && i < 9
+let all_coords f = List.init 9 f
+
+(*--------- Coordinate generation ------------*)
+
+let row_coords r = all_coords (fun c -> (r, c))
+let col_coords c = all_coords (fun r -> (r, c))
+
+let box_coords box_idx =
+  let row_start, col_start = (box_idx / 3 * 3, box_idx mod 3 * 3) in
+  all_coords (fun i -> (row_start + (i / 3), col_start + (i mod 3)))
+
+(*--------- Generic Validation ------------*)
+
+(* Checks if the values in the cells are unique *)
+let is_unique_values cells =
   let seen = Array.make 10 false in
   try
-    Array.iter
-      (fun cell ->
-        match cell with
-        | (Fixed n | Mutable n) when n >= 1 && n <= 9 ->
+    List.iter
+      (function
+        | Some n when n >= 1 && n <= 9 ->
             if seen.(n) then raise Exit else seen.(n) <- true
         | _ -> raise Exit)
-      arr ;
+      cells ;
     true
   with Exit -> false
 
-let value_in_cells board coords ~value =
-  let rec check = function
-    | [] -> false
-    | (r, c) :: coords -> (
-        match board.(r).(c) with
-        | Empty -> check coords
-        | (Fixed n | Mutable n) when n = value -> true
-        | _ -> check coords)
-  in
-  check coords
+(* Extracts the values from the cells at the specified coordinates *)
+let extract_cells board coords =
+  List.map (fun (r, c) -> cell_value board.(r).(c)) coords
 
-let is_valid_row board row = is_valid_set_cells board.(row)
+(* Checks if the values in the cells are unique *)
+let is_valid_group board coords = extract_cells board coords |> is_unique_values
 
-let is_valid_col board col =
-  let col_arr = Array.init 9 (fun row -> board.(row).(col)) in
-  is_valid_set_cells col_arr
+(* Checks if the value is in the cells *)
+let contains_value board coords value =
+  List.exists
+    (fun (r, c) ->
+      match cell_value board.(r).(c) with
+      | Some n when n = value -> true
+      | _ -> false)
+    coords
 
-let is_valid_box board box_idx =
-  let start_row = box_idx / 3 * 3 in
-  let start_col = box_idx mod 3 * 3 in
-  let box_arr =
-    Array.init 9 (fun i ->
-        let r = start_row + (i / 3) in
-        let c = start_col + (i mod 3) in
-        board.(r).(c))
-  in
-  is_valid_set_cells box_arr
-
-let value_in_row board ~row ~value =
-  value_in_cells board (List.init 9 (fun c -> (row, c))) ~value
-
-let value_in_col board ~col ~value =
-  value_in_cells board (List.init 9 (fun r -> (r, col))) ~value
+(*--------- Checks ------------*)
+let is_valid_pos row col = in_bounds row && in_bounds col
+let is_valid_row board row = is_valid_group board (row_coords row)
+let is_valid_col board col = is_valid_group board (col_coords col)
+let is_valid_box board box_idx = is_valid_group board (box_coords box_idx)
+let value_in_row board ~row ~value = contains_value board (row_coords row) value
+let value_in_col board ~col ~value = contains_value board (col_coords col) value
 
 let value_in_box board ~row ~col ~value =
-  let start_row = row / 3 * 3 in
-  let start_col = col / 3 * 3 in
-  value_in_cells board
-    (List.init 9 (fun i -> (start_row + (i / 3), start_col + (i mod 3))))
-    ~value
+  contains_value board (box_coords ((row / 3 * 3) + (col / 3))) value
 
-let is_valid_pos row col = row >= 0 && row < 9 && col >= 0 && col < 9
-
-(* Checks if placing the given value at the specified position is valid
-   according to Sudoku rules. *)
 let is_valid_move board ~row ~col ~value =
-  value >= 1 && value <= 9
+  is_valid_pos row col
   && (not (value_in_row board ~row ~value))
   && (not (value_in_col board ~col ~value))
   && not (value_in_box board ~row ~col ~value)
 
-(* Checks if the entire board is solved correctly *)
 let is_board_solved board =
-  let range = Array.init 9 (fun _ -> 0) in
-  (not (Array.exists (Array.exists (( = ) Empty)) board))
-  && Array.for_all (is_valid_row board) range
-  && Array.for_all (is_valid_col board) range
-  && Array.for_all (is_valid_box board) range
+  let idxs = all_coords Fun.id in
+  let full = not (Array.exists (Array.exists (( = ) Empty)) board) in
+  full
+  && List.for_all (is_valid_row board) idxs
+  && List.for_all (is_valid_col board) idxs
+  && List.for_all (is_valid_box board) idxs
