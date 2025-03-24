@@ -7,23 +7,17 @@ type t = cell array array
 
 let create () = Array.make_matrix 9 9 Empty
 
-(* Convert array to board *)
 let of_array array =
-  let board = create () in
-  Array.iteri
-    (fun i row ->
-      Array.iteri
-        (fun j value ->
-          board.(i).(j) <- (if value = 0 then Empty else Fixed value))
-        row)
-    array ;
-  board
+  Array.init 9 (fun i ->
+      Array.init 9 (fun j ->
+          match array.(i).(j) with
+          | 0 -> Empty
+          | n when n >= 1 && n <= 9 -> Fixed n
+          | _ -> failwith "Invalid cell value"))
 
-(* Convert board to array *)
 let to_array board =
   Array.map (Array.map (function Empty -> 0 | Fixed n | Mutable n -> n)) board
 
-(* Print board *)
 let pp fmt board =
   for i = 0 to 8 do
     if i mod 3 = 0 && i > 0 then Format.fprintf fmt "-------------------@," ;

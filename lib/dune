@@ -16,6 +16,7 @@
  Ui_debug
  Ui_menu
  Ui_hints
+ Ui_game_completion
 
  Invalid_cells
  Hints
