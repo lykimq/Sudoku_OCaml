@@ -102,7 +102,7 @@ let draw_board_with_hints drawing_area board_ref =
           Array.for_all
             (Array.for_all (fun x -> x = []))
             !Ui_state.current_hints
-        then Ui_state.current_hints := Hints.compute_all_hints !board_ref ;
+        then Ui_state.current_hints := Hints.get_all_hints !board_ref ;
         (* Draw the hints *)
         Ui_hints.draw_hints ctxt !Ui_state.current_hints
       end ;

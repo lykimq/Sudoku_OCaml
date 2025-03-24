@@ -45,7 +45,7 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                     (* Update the board reference with the new state *)
                     board_ref := new_board ;
                     (* Reset hints since the board has changed *)
-                    Ui_state.current_hints := Hints.clear_all_hints () ;
+                    Ui_state.current_hints := Hints.make_empty_hint_board () ;
                     (* Request a redraw of the drawing area *)
                     GtkBase.Widget.queue_draw drawing_area#as_widget
                 | None -> Ui_debug.debug "Failed to clear cell\n") ;
@@ -59,7 +59,7 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                     (* Update the board reference with the new state *)
                     board_ref := new_board ;
                     (* Reset hints since the board has changed *)
-                    Ui_state.current_hints := Hints.clear_all_hints () ;
+                    Ui_state.current_hints := Hints.make_empty_hint_board () ;
                     if is_valid
                     then
                       (* If the move is valid, clear any invalid marking *)

@@ -11,12 +11,13 @@ let selected : (int * int) option ref = ref None
 let show_hints : bool ref = ref false
 
 (* The current hints on the board. *)
-let current_hints : int list array array ref = ref (Hints.clear_all_hints ())
+let current_hints : int list array array ref =
+  ref (Hints.make_empty_hint_board ())
 
 (* Updates the current board and resets the hints. *)
 let update_board new_board =
   current_board := new_board ;
-  current_hints := Hints.clear_all_hints () ;
+  current_hints := Hints.make_empty_hint_board () ;
   match !current_drawing_area with
   | Some drawing_area -> GtkBase.Widget.queue_draw drawing_area#as_widget
   | None -> ()
@@ -31,6 +32,6 @@ let refresh_display () =
 let reset_game_state () =
   selected := None ;
   show_hints := false ;
-  current_hints := Hints.clear_all_hints () ;
+  current_hints := Hints.make_empty_hint_board () ;
   Ui_debug.debug
     "Game state reset: hints cleared and disabled, selection removed"
