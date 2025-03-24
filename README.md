@@ -1,6 +1,6 @@
 # Sudoku OCaml
 
-A Sudoku game implementation in OCaml with a GTK-based graphical user interface. This project demonstrates functional programming principles and OCaml's capabilities in creating interactive applications.
+A Sudoku game implementation in OCaml with a GTK-based graphical user interface and Cairo. This project demonstrates functional programming principles and OCaml's capabilities in creating interactive applications.
 
 <figure>
   <img src="pics/no_hints.png" alt="Sudoku Game Board With No Hints">
@@ -87,6 +87,7 @@ dune build && dune exec _build/default/bin/main.exe
 ## Game Controls
 
 - **Mouse**: Click to select cells
+- **Arrows Keys**: Move up, down, left, right
 - **Number Keys (1-9)**: Enter numbers in selected cells
 - **Backspace/Delete**: Clear selected cell
 - **Menu Options**:
