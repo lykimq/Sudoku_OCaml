@@ -2,24 +2,27 @@ open Board
 
 let is_valid_set_cells arr =
   let seen = Array.make 10 false in
-  let valid = ref true in
-  Array.iteri
-    (fun _i cell ->
-      match cell with
-      | (Fixed n | Mutable n) when n >= 1 && n <= 9 ->
-          if seen.(n) then valid := false else seen.(n) <- true
-      | _ -> valid := false)
-    arr ;
-  !valid
+  try
+    Array.iter
+      (fun cell ->
+        match cell with
+        | (Fixed n | Mutable n) when n >= 1 && n <= 9 ->
+            if seen.(n) then raise Exit else seen.(n) <- true
+        | _ -> raise Exit)
+      arr ;
+    true
+  with Exit -> false
 
 let value_in_cells board coords ~value =
-  List.exists
-    (fun (r, c) ->
-      match board.(r).(c) with
-      | Empty -> false
-      | (Fixed n | Mutable n) when n = value -> true
-      | _ -> false)
-    coords
+  let rec check = function
+    | [] -> false
+    | (r, c) :: coords -> (
+        match board.(r).(c) with
+        | Empty -> check coords
+        | (Fixed n | Mutable n) when n = value -> true
+        | _ -> check coords)
+  in
+  check coords
 
 let is_valid_row board row = is_valid_set_cells board.(row)
 
@@ -61,23 +64,10 @@ let is_valid_move board ~row ~col ~value =
   && (not (value_in_col board ~col ~value))
   && not (value_in_box board ~row ~col ~value)
 
-(* Checks if the entire board is solved correctly. A board is considered solved
-   if: 1. All cells are filled (no Empty cells) 2. All rows are valid 3. All
-   columns are valid 4. All 3x3 boxes are valid *)
+(* Checks if the entire board is solved correctly *)
 let is_board_solved board =
-  if Array.exists (Array.exists (( = ) Empty)) board
-  then false
-  else
-    let valid_rows =
-      Array.init 9 (fun row -> is_valid_row board row)
-      |> Array.for_all (( = ) true)
-    in
-    let valid_cols =
-      Array.init 9 (fun col -> is_valid_col board col)
-      |> Array.for_all (( = ) true)
-    in
-    let valid_boxes =
-      Array.init 9 (fun box_idx -> is_valid_box board box_idx)
-      |> Array.for_all (( = ) true)
-    in
-    valid_rows && valid_cols && valid_boxes
+  let range = Array.init 9 (fun _ -> 0) in
+  (not (Array.exists (Array.exists (( = ) Empty)) board))
+  && Array.for_all (is_valid_row board) range
+  && Array.for_all (is_valid_col board) range
+  && Array.for_all (is_valid_box board) range
