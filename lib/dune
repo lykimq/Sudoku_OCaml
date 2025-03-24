@@ -6,7 +6,6 @@
  Board_generate
  Board_mutation
  Board_validation
- Board_rules
 
  Ui_main
  Ui_events

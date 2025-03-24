@@ -50,3 +50,24 @@ let value_in_box board ~row ~col ~value =
   value_in_cells board
     (List.init 9 (fun i -> (start_row + (i / 3), start_col + (i mod 3))))
     ~value
+
+(* Checks if the entire board is solved correctly. A board is considered solved
+   if: 1. All cells are filled (no Empty cells) 2. All rows are valid 3. All
+   columns are valid 4. All 3x3 boxes are valid *)
+let is_board_solved board =
+  if Array.exists (Array.exists (( = ) Empty)) board
+  then false
+  else
+    let valid_rows =
+      Array.init 9 (fun row -> is_valid_row board row)
+      |> Array.for_all (( = ) true)
+    in
+    let valid_cols =
+      Array.init 9 (fun col -> is_valid_col board col)
+      |> Array.for_all (( = ) true)
+    in
+    let valid_boxes =
+      Array.init 9 (fun box_idx -> is_valid_box board box_idx)
+      |> Array.for_all (( = ) true)
+    in
+    valid_rows && valid_cols && valid_boxes
