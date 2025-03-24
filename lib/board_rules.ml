@@ -10,12 +10,7 @@ let is_valid_set_cells arr =
   let valid = ref true in
   Array.iteri
     (fun i cell ->
-      Ui_debug.debug "Cell %d: %s\n" i
-        (match cell with
-        | Empty -> "Empty"
-        | Fixed n -> Printf.sprintf "Fixed %d" n
-        | Mutable n -> Printf.sprintf "Mutable %d" n) ;
-      flush stdout ;
+      Ui_debug.debug_cell i cell ;
       match cell with
       | (Fixed n | Mutable n) when n >= 1 && n <= 9 ->
           if seen.(n)
@@ -33,77 +28,26 @@ let is_valid_set_cells arr =
   flush stdout ;
   !valid
 
-(* Check if a number is valid in a cell *)
-let is_valid_number board row col num =
-  num >= 1 && num <= 9
-  && (not (Board_validation.value_in_row board ~row ~value:num))
-  && (not (Board_validation.value_in_col board ~col ~value:num))
-  && not (Board_validation.value_in_box board ~row ~col ~value:num)
-
-(* Optimized function to check if the board is solved *)
 let is_board_solved board =
-  (* Quick fail: If any cell is empty, board is not solved *)
-  let empty_cells = Array.exists (Array.exists (( = ) Empty)) board in
-  Ui_debug.debug "Empty cells: %b\n" empty_cells ;
-  flush stdout ;
-
-  if empty_cells
+  if Array.exists (Array.exists (( = ) Empty)) board
   then false
   else
-    (* Helper function to check if a set of cells is valid *)
-    let check_set cells =
-      let seen = Array.make 10 false in
-      let valid = ref true in
-      Array.iter
-        (function
-          | (Fixed n | Mutable n) when n >= 1 && n <= 9 ->
-              if seen.(n) then valid := false else seen.(n) <- true
-          | _ -> valid := false)
-        cells ;
-      !valid
+    let valid_rows = Array.for_all is_valid_set_cells board in
+    let valid_cols =
+      Array.init 9 (fun col -> Array.init 9 (fun row -> board.(row).(col)))
+      |> Array.for_all is_valid_set_cells
     in
-
-    (* Check all rows *)
-    let rows_valid = ref true in
-    for row = 0 to 8 do
-      if !rows_valid
-      then begin
-        let valid = check_set board.(row) in
-        (*Ui_debug.debug "Row %d valid: %b\n" row valid ; flush stdout ;*)
-        rows_valid := valid
-      end
-    done ;
-
-    (* Check all columns *)
-    let cols_valid = ref true in
-    for col = 0 to 8 do
-      if !cols_valid
-      then begin
-        let column = Array.init 9 (fun row -> board.(row).(col)) in
-        let valid = check_set column in
-        (*Ui_debug.debug "Column %d valid: %b\n" col valid ; flush stdout ;*)
-        cols_valid := valid
-      end
-    done ;
-
-    (* Check all 3x3 boxes *)
-    let boxes_valid = ref true in
-    for box_row = 0 to 2 do
-      for box_col = 0 to 2 do
-        if !boxes_valid
-        then begin
-          let box_values =
-            Array.init 9 (fun i ->
-                let r = (box_row * 3) + (i / 3) in
-                let c = (box_col * 3) + (i mod 3) in
-                board.(r).(c))
-          in
-          let valid = check_set box_values in
-          (*Ui_debug.debug "Box %d,%d valid: %b\n" box_row box_col valid ; flush
-            stdout ;*)
-          boxes_valid := valid
-        end
-      done
-    done ;
-
-    !rows_valid && !cols_valid && !boxes_valid
+    let valid_boxes =
+      let extract_box board row col =
+        Array.init 9 (fun i ->
+            let r = (row / 3 * 3) + (i / 3) in
+            let c = (col / 3 * 3) + (i mod 3) in
+            board.(r).(c))
+      in
+      Array.init 9 Fun.id
+      |> Array.for_all (fun i ->
+             let row = i / 3 in
+             let col = i mod 3 in
+             extract_box board row col |> is_valid_set_cells)
+    in
+    valid_rows && valid_cols && valid_boxes

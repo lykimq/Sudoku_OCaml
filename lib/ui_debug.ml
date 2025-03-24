@@ -9,3 +9,11 @@ let debug fmt =
         flush stdout)
       fmt
   else Printf.ksprintf (fun _ -> ()) fmt
+
+let debug_cell i cell =
+  debug "Cell %d: %s\n" i
+    (match cell with
+    | Board.Empty -> "Empty"
+    | Board.Fixed n -> Printf.sprintf "Fixed %d" n
+    | Board.Mutable n -> Printf.sprintf "Mutable %d" n) ;
+  flush stdout

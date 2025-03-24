@@ -70,7 +70,7 @@ let rec solve board ~row ~col ~rng =
     while (not !found) && !i < 9 do
       (* Get the next number to try *)
       let num = nums.(!i) in
-      if Board_rules.is_valid_number (Board.of_array board) row col num
+      if Game_move.is_valid_move (Board.of_array board) ~row ~col ~value:num
       then (
         (* Place the number in the current cell *)
         board.(row).(col) <- num ;
