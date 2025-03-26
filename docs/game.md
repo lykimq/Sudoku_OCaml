@@ -21,7 +21,7 @@ Core logic to handle:
 
 ## Board Generation Logic
 1. Fill Diagonal 3x3 Boxes:
-- Each diagonal box is filled independently using Fisher-Yates shuffle to randomize values 1-9.
+- Each diagonal box is filled independently using Fisher-Yates shuffle to randomize values 1-9. Use Fister-Yates because it is unbiased randomization, efficient time complexity (O(n)), in-place shuffle and ensures valid Sudoku box initialization.
 
 2. Solve Full Board With Backtracking:
 Recursive backtracking.
