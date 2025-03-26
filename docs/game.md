@@ -38,7 +38,7 @@ Recursive backtracking.
 
 ## Invalid Cell Tracking
 - Uses a hash table to track cells that contain invalid user inputs.
-- When a move is illegal (duplicate in row, colu;n, or box) the cell is marked red.
+- When a move is illegal (duplicate in row, column, or box) the cell is marked red.
 - Valid input automatically clear previous invalid markers.
 
 ## UI System (GTK + Cairo)

@@ -18,8 +18,7 @@ let get_valid_numbers board ~row ~col =
       |> List.filter (fun value ->
              not (Board_validation.contains_value board all_vals value))
 
-(* Filters the hints array to only show hints for empty. Optimized to work
-   in-place when possible. *)
+(* Filters the hints array to only show hints for empty cells. *)
 let filter_hints original_board (hints_board : int list array array) :
     int list array array =
   Array.mapi
