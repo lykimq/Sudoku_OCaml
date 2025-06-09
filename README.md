@@ -1,6 +1,6 @@
 # Sudoku OCaml
 
-A Sudoku game implementation in OCaml with a GTK-based graphical user interface and Cairo. This project demonstrates functional programming principles and OCaml's capabilities in creating interactive applications.
+A Sudoku game implementation in OCaml with a GTK3-based graphical user interface using LablGtk3 and Cairo2 for rendering. This project demonstrates functional programming principles and OCaml's capabilities in creating interactive applications with modern GUI libraries.
 
 <figure>
   <img src="pics/no_hints.png" alt="Sudoku Game Board With No Hints">
@@ -24,7 +24,7 @@ A Sudoku game implementation in OCaml with a GTK-based graphical user interface 
 
 ## Features
 
-- **Graphical User Interface**: Built with GTK and Cairo for smooth rendering
+- **Graphical User Interface**: Built with LablGtk3 and Cairo2 for smooth rendering
 - **Multiple Difficulty Levels**: Easy, Medium, and Hard puzzles
 - **Smart Hints System**: Shows possible valid numbers for each cell
 - **Input Validation**: Real-time validation of moves
@@ -37,9 +37,9 @@ A Sudoku game implementation in OCaml with a GTK-based graphical user interface 
 - OCaml (version 4.14.0 or later)
 - OPAM (OCaml Package Manager)
 - GTK3 development libraries
-- Cairo graphics library
-- Cairo2-Gtk integration between Cairo and GTK
-- Dune build system
+- Cairo2 graphics library
+- LablGtk3 OCaml bindings for GTK3
+- Dune build system (version 2.9.0 or later)
 
 ## Installation
 
@@ -60,7 +60,13 @@ eval $(opam env)
 
 3. Install required packages:
 ```bash
-opam install dune lablgtk3 cairo2-gtk
+opam install dune lablgtk3 cairo2
+```
+
+4. Clone and navigate to the project:
+```bash
+git clone <repository-url>
+cd Sudoku_OCaml
 ```
 
 5. Build the project:
@@ -79,6 +85,21 @@ dune exec bin/main.exe
 make sudoku
 ```
 
+## Testing
+
+The project includes comprehensive tests using Alcotest. To run the tests:
+
+```bash
+dune runtest
+```
+
+## Development Dependencies
+
+For development and testing, you'll also need:
+```bash
+opam install alcotest qcheck
+```
+
 ## Debug
 ```bash
 dune build && dune exec _build/default/bin/main.exe
@@ -86,12 +107,17 @@ dune build && dune exec _build/default/bin/main.exe
 
 ## Game Controls
 
-- **Mouse**: Click to select cells
-- **Arrows Keys**: Move up, down, left, right
-- **Number Keys (1-9)**: Enter numbers in selected cells
-- **Backspace/Delete**: Clear selected cell
+- **Mouse**: Left-click to select cells
+- **Arrow Keys**: Navigate between cells (Up, Down, Left, Right)
+- **Number Keys (1-9)**: Enter numbers in selected cells (supports both regular and numpad keys)
+- **Backspace/Delete/Numpad 0**: Clear selected cell
 - **Menu Options**:
-  - New Game: Start a new puzzle
-  - Difficulty Selection: Choose puzzle difficulty
-  - Show Hints: Toggle display of possible numbers
-  - Quit: Exit the game
+  - **Game → New Game**: Choose difficulty (Easy, Medium, Hard) and start a new puzzle
+  - **Game → Show Hints**: Toggle display of possible numbers for each cell
+  - **Game → Quit**: Exit the game
+
+## Game Features
+
+- **Invalid Move Detection**: Invalid moves are highlighted in red
+- **Auto Game Completion**: When you complete a puzzle, a dialog will ask if you want to start a new game
+- **Hint System**: Shows all possible valid numbers for empty cells when enabled
