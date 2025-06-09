@@ -1,45 +1,49 @@
 open Board
 
-(** Types and utility functions for board validation. *)
-type coords = (int * int) list
+(** Board validation utilities for Sudoku *)
 
+(** Basic utility functions *)
 let cell_value = function Empty -> None | Fixed n | Mutable n -> Some n
+
 let in_bounds i = i >= 0 && i < 9
-let all_coords f = List.init 9 f
 
-(** Coordinate generation for rows, columns, and 3x3 boxes. *)
+(** Generate coordinates for validation *)
+let row_coords r = List.init 9 (fun c -> (r, c))
 
-let row_coords r = all_coords (fun c -> (r, c))
-let col_coords c = all_coords (fun r -> (r, c))
+let col_coords c = List.init 9 (fun r -> (r, c))
 
 let box_coords box_idx =
-  let row_start, col_start = (box_idx / 3 * 3, box_idx mod 3 * 3) in
-  all_coords (fun i -> (row_start + (i / 3), col_start + (i mod 3)))
+  let row_start = box_idx / 3 * 3 in
+  let col_start = box_idx mod 3 * 3 in
+  List.init 9 (fun i ->
+      let row_offset = i / 3 in
+      let col_offset = i mod 3 in
+      (row_start + row_offset, col_start + col_offset))
 
-(** Generic validation using uniqueness checking. *)
+let box_index_of (row, col) = (row / 3 * 3) + (col / 3)
 
-(** Checks if values 1-9 are unique (no duplicates) using array-based lookup.
-    Algorithm: O(n) single pass with early exit on duplicates. *)
-let is_unique_values cells =
-  let seen = Array.make 10 false in
-  try
-    List.iter
-      (function
-        | Some n when n >= 1 && n <= 9 ->
-            if seen.(n) then raise Exit else seen.(n) <- true
-        | _ -> raise Exit)
-      cells ;
-    true
-  with Exit -> false
+(** Core validation logic *)
 
-(** Extracts cell values from board at given coordinates. *)
-let extract_cells board coords =
+(** Check if a list of values contains only unique, valid Sudoku numbers *)
+let has_unique_values values =
+  let rec check seen = function
+    | [] -> true
+    | None :: rest -> check seen rest (* Skip empty cells *)
+    | Some n :: _ when n < 1 || n > 9 -> false (* Invalid range *)
+    | Some n :: _ when List.mem n seen -> false (* Duplicate *)
+    | Some n :: rest -> check (n :: seen) rest
+  in
+  check [] values
+
+(** Extract cell values at given coordinates *)
+let values_at_coords board coords =
   List.map (fun (r, c) -> cell_value board.(r).(c)) coords
 
-(** Validates that a group (row/column/box) has unique values. *)
-let is_valid_group board coords = extract_cells board coords |> is_unique_values
+(** Check if a group (row/column/box) contains only unique valid values *)
+let is_valid_group board coords =
+  values_at_coords board coords |> has_unique_values
 
-(** Checks if a specific value exists in the given coordinates. *)
+(** Check if a value exists at any of the given coordinates *)
 let contains_value board coords value =
   List.exists
     (fun (r, c) ->
@@ -48,31 +52,45 @@ let contains_value board coords value =
       | _ -> false)
     coords
 
-(** Validation functions for Sudoku rules. *)
-let is_valid_pos row col = in_bounds row && in_bounds col
+(** Constraint coordinate management *)
+type coords = (int * int) list
 
-let is_valid_row board row = is_valid_group board (row_coords row)
-let is_valid_col board col = is_valid_group board (col_coords col)
-let is_valid_box board box_idx = is_valid_group board (box_coords box_idx)
-let value_in_row board ~row ~value = contains_value board (row_coords row) value
-let value_in_col board ~col ~value = contains_value board (col_coords col) value
+type constraint_coords = {
+  row_coords: coords;
+  col_coords: coords;
+  box_coords: coords;
+}
 
-let value_in_box board ~row ~col ~value =
-  contains_value board (box_coords ((row / 3 * 3) + (col / 3))) value
+let get_constraint_coords row col =
+  let box_idx = box_index_of (row, col) in
+  {
+    row_coords= row_coords row;
+    col_coords= col_coords col;
+    box_coords= box_coords box_idx;
+  }
 
-(** Core validation: checks if placing a value at position violates Sudoku
-    rules. *)
+(** Main validation functions *)
+
+(** Check if a move violates Sudoku constraints *)
 let is_valid_move board ~row ~col ~value =
-  is_valid_pos row col
-  && (not (value_in_row board ~row ~value))
-  && (not (value_in_col board ~col ~value))
-  && not (value_in_box board ~row ~col ~value)
+  if not (in_bounds row && in_bounds col)
+  then false
+  else
+    let coords = get_constraint_coords row col in
+    not
+      (contains_value board coords.row_coords value
+      || contains_value board coords.col_coords value
+      || contains_value board coords.box_coords value)
 
-(** Checks if entire board is completely and correctly solved. *)
+(** Check if the entire board is completely and correctly solved *)
 let is_board_solved board =
-  let idxs = all_coords Fun.id in
-  let full = not (Array.exists (Array.exists (( = ) Empty)) board) in
-  full
-  && List.for_all (is_valid_row board) idxs
-  && List.for_all (is_valid_col board) idxs
-  && List.for_all (is_valid_box board) idxs
+  (* Check if board is full *)
+  let is_full = not (Array.exists (Array.exists (( = ) Empty)) board) in
+  if not is_full
+  then false
+  else
+    (* Check all constraints *)
+    let indices = List.init 9 Fun.id in
+    List.for_all (fun i -> is_valid_group board (row_coords i)) indices
+    && List.for_all (fun i -> is_valid_group board (col_coords i)) indices
+    && List.for_all (fun i -> is_valid_group board (box_coords i)) indices

@@ -9,7 +9,7 @@ open Board
     state. *)
 let update_cell board ~row ~col ~f =
   (* Fail fast on invalid positions *)
-  if not (Board_validation.is_valid_pos row col)
+  if not (Board_validation.in_bounds row && Board_validation.in_bounds col)
   then None
   else
     match board.(row).(col) with

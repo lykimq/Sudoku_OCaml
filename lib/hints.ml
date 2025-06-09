@@ -1,28 +1,27 @@
 open Board
 
 let make_empty_hint_board () = Array.make_matrix 9 9 []
-let is_empty cell = match cell with Empty -> true | _ -> false
 
 (** Returns valid values (1-9) that can be placed at position according to
-    Sudoku rules. Algorithm: Generate all coordinates for row/column/box, then
-    filter available numbers. *)
+    Sudoku rules. Optimized to use constraint coordinates for better
+    performance. *)
 let get_valid_numbers board ~row ~col =
   match board.(row).(col) with
   | Fixed _ | Mutable _ -> []
   | Empty ->
-      let row_vals = Board_validation.row_coords row in
-      let col_vals = Board_validation.col_coords col in
-      let box_vals = Board_validation.box_coords ((row / 3 * 3) + (col / 3)) in
-      let all_vals = List.concat [row_vals; col_vals; box_vals] in
+      let coords = Board_validation.get_constraint_coords row col in
+      let all_coords =
+        List.concat [coords.row_coords; coords.col_coords; coords.box_coords]
+      in
       List.init 9 (fun i -> i + 1)
       |> List.filter (fun value ->
-             not (Board_validation.contains_value board all_vals value))
+             not (Board_validation.contains_value board all_coords value))
 
 (** Calculates all possible valid moves for every empty cell. Used for providing
     hints to the player. *)
 let get_all_hints board =
   Array.init 9 (fun row ->
       Array.init 9 (fun col ->
-          if is_empty board.(row).(col)
-          then get_valid_numbers board ~row ~col
-          else []))
+          match board.(row).(col) with
+          | Empty -> get_valid_numbers board ~row ~col
+          | Fixed _ | Mutable _ -> []))
