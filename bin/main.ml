@@ -8,13 +8,12 @@ let () =
 
   let key_press_handler key =
     match key with
-    | 65288 (* Backspace*) | 65535 (* Delete *) -> Some 0
-    | key -> (
-        match Char.chr key with
-        | '1' .. '9' as c ->
-            let value = int_of_string (String.make 1 c) in
-            Some value
-        | _ -> None)
+    | 65288 (* Backspace*) | 65535 (* Delete *) | 65456 (* KP_0 *) -> Some 0
+    (* Numpad keys: use range matching for cleaner code *)
+    | n when n >= 65457 && n <= 65465 -> Some (n - 65456) (* KP_1 to KP_9 *)
+    (* Regular ASCII digit keys *)
+    | n when n >= 49 && n <= 57 -> Some (n - 48) (* '1' to '9' *)
+    | _ -> None
   in
 
   let click_handler _x _y = Ui_state.refresh_display () in

@@ -1,6 +1,6 @@
 (library
  (name Sudoku_OCaml)
- (libraries lablgtk3 cairo2 cairo2-gtk)
+ (libraries lablgtk3 cairo2)
  (modules
  Board
  Board_generate
