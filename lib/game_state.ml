@@ -4,7 +4,13 @@ type game_status =
   | Complete of string (* Completion message *)
 
 (** Creates a new random board with default difficulty:Easy *)
-let create_new_board () = Board_generate.generate_random_board ()
+let create_new_board () =
+  match Board_generate.generate_safe () with
+  | Some board -> board
+  | None ->
+      (* Fallback to a basic empty board if generation fails *)
+      Printf.eprintf "Warning: Board generation failed, creating empty board\n" ;
+      Array.make_matrix 9 9 0
 
 (** Checks board completion and returns appropriate status with message. *)
 let get_game_status board =

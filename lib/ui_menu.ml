@@ -16,8 +16,12 @@ let create_menu window board_ref (vbox : GPack.box) =
       (new_game_factory#add_item label ~callback:(fun () ->
            Ui_state.reset_game_state () ;
            let new_board =
-             Board.of_array
-               (Board_generate.generate_random_board ~difficulty ())
+             match Board_generate.generate_safe ~difficulty () with
+             | Some board -> Board.of_array board
+             | None ->
+                 Printf.eprintf
+                   "Warning: Board generation failed, using empty board\n" ;
+                 Board.of_array (Array.make_matrix 9 9 0)
            in
            board_ref := new_board ;
            Ui_state.current_board := new_board ;
