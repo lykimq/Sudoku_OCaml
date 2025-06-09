@@ -37,10 +37,15 @@ let refresh_display () =
       GtkBase.Widget.queue_draw area#as_widget
   | None -> ()
 
+(** Resource cleanup function to prevent memory leaks *)
+let cleanup_resources () =
+  current_drawing_area := None ;
+  current_hints := Hints.make_empty_hint_board () ;
+  Gc.minor () (* Trigger minor garbage collection *)
+
 (** Resets all game state to initial values for new game. *)
 let reset_game_state () =
+  cleanup_resources () ;
   selected := None ;
   show_hints := false ;
-  current_hints := Hints.make_empty_hint_board () ;
-  Ui_debug.debug
-    "Game state reset: hints cleared and disabled, selection removed"
+  Ui_debug.debug "Game state reset with resource cleanup"
