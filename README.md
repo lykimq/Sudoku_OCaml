@@ -25,9 +25,10 @@ A Sudoku game implementation in OCaml with a GTK3-based graphical user interface
 ## Features
 
 - **Graphical User Interface**: Built with LablGtk3 and Cairo2 for smooth rendering
-- **Multiple Difficulty Levels**: Easy, Medium, and Hard puzzles
+- **Professional Puzzle Generation**: Guarantees unique solutions using strategic removal algorithm
+- **Multiple Difficulty Levels**: Easy, Medium, and Hard puzzles with authentic difficulty calibration
 - **Smart Hints System**: Shows possible valid numbers for each cell
-- **Input Validation**: Real-time validation of moves
+- **Input Validation**: Real-time validation of moves with constraint satisfaction
 - **Game State Tracking**: Tracks invalid moves and game completion
 - **Responsive Design**: Adapts to window resizing
 - **Cross-Platform**: Works on Linux, macOS, and Windows
@@ -97,7 +98,7 @@ dune runtest
 
 For development and testing, you'll also need:
 ```bash
-opam install alcotest qcheck
+opam install alcotest
 ```
 
 ## Debug
@@ -121,3 +122,33 @@ dune build && dune exec _build/default/bin/main.exe
 - **Invalid Move Detection**: Invalid moves are highlighted in red
 - **Auto Game Completion**: When you complete a puzzle, a dialog will ask if you want to start a new game
 - **Hint System**: Shows all possible valid numbers for empty cells when enabled
+
+## Puzzle Generation Algorithm
+
+This implementation features a **professional-grade puzzle generator** that guarantees high-quality Sudoku puzzles:
+
+### Unique Solution Guarantee
+- Every generated puzzle has **exactly one solution** (no ambiguous puzzles)
+- Uses strategic cell removal with solution validation
+- Prevents unsolvable or multiple-solution puzzles
+
+### Three-Phase Generation Process
+
+1. **Foundation Phase**: Fill diagonal 3×3 boxes independently
+   - Reduces search space from O(9^81) to O(9^54)
+   - Boxes at (0,0), (3,3), (6,6) have no overlapping constraints
+
+2. **Completion Phase**: Complete board using backtracking
+   - Guarantees valid, complete Sudoku solution
+   - Randomization ensures variety between puzzles
+
+3. **Strategic Removal Phase**: Create puzzle by removing cells
+   - Tests each removal to maintain solution uniqueness
+   - Stops when target difficulty reached or no more safe removals possible
+
+### Difficulty Calibration
+- **Easy**: ~35 cells removed (~57% filled) - Gentle introduction
+- **Medium**: ~45 cells removed (~44% filled) - Moderate challenge
+- **Hard**: ~55 cells removed (~32% filled) - Significant challenge
+
+**Note**: Actual difficulty may vary based on puzzle structure. The algorithm prioritizes puzzle quality over exact cell count targets.
