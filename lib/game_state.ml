@@ -3,6 +3,9 @@ type game_status =
   | InProgress
   | Complete of string (* Completion message *)
 
+(** Creates a new random board with default difficulty:Easy *)
+let create_new_board () = Board_generate.generate_random_board ()
+
 (** Checks board completion and returns appropriate status with message. *)
 let get_game_status board =
   let solved = Board_validation.is_board_solved board in

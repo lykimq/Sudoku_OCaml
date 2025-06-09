@@ -2,9 +2,7 @@ open Sudoku_OCaml
 
 let () =
   Random.self_init () ;
-  let board =
-    Board_generate.generate_random_board ~difficulty:Board_generate.Easy ()
-  in
+  let board = Game_state.create_new_board () in
 
   let key_press_handler key =
     match key with

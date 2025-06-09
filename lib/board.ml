@@ -33,17 +33,3 @@ let of_array array =
     Trade-off: Loses Fixed vs Mutable distinction for simple representation. *)
 let to_array board =
   Array.map (Array.map (function Empty -> 0 | Fixed n | Mutable n -> n)) board
-
-(** Pretty printer for debugging and display. *)
-let pp fmt board =
-  for i = 0 to 8 do
-    if i mod 3 = 0 && i > 0 then Format.fprintf fmt "-------------------@," ;
-    for j = 0 to 8 do
-      if j mod 3 = 0 && j > 0 then Format.fprintf fmt "|" ;
-      match board.(i).(j) with
-      | Empty -> Format.fprintf fmt " ."
-      | Fixed n | Mutable n -> Format.fprintf fmt " %d" n
-    done ;
-    Format.fprintf fmt "@,"
-  done ;
-  Format.fprintf fmt "@]"

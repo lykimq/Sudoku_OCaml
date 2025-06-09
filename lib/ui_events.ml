@@ -44,8 +44,11 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                 (match Board_mutation.clear_cell !board_ref ~row ~col with
                 | Some new_board ->
                     Ui_debug.debug "Cell cleared successfully\n" ;
+                    (* Remove error highlighting since cell is now empty *)
                     Invalid_cells.clear_invalid ~row ~col ;
                     board_ref := new_board ;
+                    (* Clear cached hints - they're outdated since board
+                       changed *)
                     Ui_state.current_hints := Hints.make_empty_hint_board () ;
                     GtkBase.Widget.queue_draw drawing_area#as_widget
                 | None -> Ui_debug.debug "Failed to clear cell\n") ;
@@ -57,20 +60,25 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                 | Some (new_board, is_valid) ->
                     Ui_debug.debug "Cell updated successfully\n" ;
                     board_ref := new_board ;
+                    (* Reset hints cache - placing/changing a number affects
+                       possible values in other cells *)
                     Ui_state.current_hints := Hints.make_empty_hint_board () ;
                     if is_valid
-                    then Invalid_cells.clear_invalid ~row ~col
-                    else Invalid_cells.mark_invalid ~row ~col ;
+                    then
+                      (* Value is correct - remove any error highlighting *)
+                      Invalid_cells.clear_invalid ~row ~col
+                    else
+                      (* Value breaks Sudoku rules - highlight cell in red *)
+                      Invalid_cells.mark_invalid ~row ~col ;
                     GtkBase.Widget.queue_draw drawing_area#as_widget ;
                     (* Check for game completion and handle new game
                        generation *)
                     if Game_state.check_game_completion !board_ref
                     then begin
                       Ui_state.reset_game_state () ;
+                      (* Create new board *)
                       board_ref :=
-                        Board.of_array
-                          (Board_generate.generate_random_board
-                             ~difficulty:Board_generate.Easy ()) ;
+                        Board.of_array (Game_state.create_new_board ()) ;
                       GtkBase.Widget.queue_draw drawing_area#as_widget
                     end
                 | None -> Ui_debug.debug "Failed to update cell\n") ;

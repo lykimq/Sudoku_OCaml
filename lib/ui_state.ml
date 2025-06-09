@@ -22,13 +22,19 @@ let update_board new_board =
   current_board := new_board ;
   current_hints := Hints.make_empty_hint_board () ;
   match !current_drawing_area with
-  | Some drawing_area -> GtkBase.Widget.queue_draw drawing_area#as_widget
+  | Some drawing_area ->
+      (* Schedule a redraw instead of drawing immediately - more efficient and
+         prevents screen flickering from multiple rapid updates *)
+      GtkBase.Widget.queue_draw drawing_area#as_widget
   | None -> ()
 
 (** Triggers redraw of current drawing area if available. *)
 let refresh_display () =
   match !current_drawing_area with
-  | Some area -> GtkBase.Widget.queue_draw area#as_widget
+  | Some area ->
+      (* Queue the refresh instead of immediate draw - GTK batches multiple
+         requests together for smoother performance *)
+      GtkBase.Widget.queue_draw area#as_widget
   | None -> ()
 
 (** Resets all game state to initial values for new game. *)
