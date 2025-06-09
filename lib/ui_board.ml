@@ -1,14 +1,14 @@
 open Board
 open Ui_config
 
-(* Draw background *)
+(** Draws cell background with specified color. *)
 let drawing_background ctxt color x y =
   let r, g, b = color in
   Cairo.set_source_rgb ctxt r g b ;
   Cairo.rectangle ctxt x y ~w:cell_size ~h:cell_size ;
   Cairo.fill ctxt
 
-(* Draw text *)
+(** Draws centered text in cell with specified color and font size. *)
 let draw_text ctxt text x y color font_size =
   let r, g, b = color in
   Cairo.set_source_rgb ctxt r g b ;
@@ -21,12 +21,12 @@ let draw_text ctxt text x y color font_size =
   Cairo.move_to ctxt text_x text_y ;
   Cairo.show_text ctxt text
 
-(* Draw grid *)
+(** Draws Sudoku grid with thick lines for 3x3 box boundaries. *)
 let draw_grid ctxt =
   let gr, gg, gb = grid_color in
   Cairo.set_source_rgb ctxt gr gg gb ;
 
-  (* Draw inner grid lines *)
+  (* Thick lines for 3x3 boxes, thin lines for cells *)
   for i = 0 to 9 do
     let line_width = if i mod 3 = 0 then 2.0 else 1.0 in
     Cairo.set_line_width ctxt line_width ;
@@ -44,25 +44,29 @@ let draw_grid ctxt =
     Cairo.stroke ctxt
   done ;
 
-  (* Draw outer border *)
+  (* Outer border *)
   Cairo.set_line_width ctxt 3.0 ;
   Cairo.rectangle ctxt margin margin ~w:board_size ~h:board_size ;
   Cairo.stroke ctxt
 
-(* Draw board *)
+(** Main board rendering function with cell highlighting and number display.
+
+    Design: Separates background, content, and grid rendering for clarity.
+    Colors: Different colors for Fixed vs Mutable vs Invalid vs Selected cells.
+*)
 let draw_board (ctx : Cairo.context) board selected =
   (* Clear background *)
   let br, bg, bb = background_color in
   Cairo.set_source_rgb ctx br bg bb ;
   Cairo.paint ctx ;
 
-  (* Draw cells *)
+  (* Render each cell *)
   for row = 0 to 8 do
     for col = 0 to 8 do
       let x = margin +. (float_of_int col *. cell_size) in
       let y = margin +. (float_of_int row *. cell_size) in
 
-      (* Draw cell background *)
+      (* Cell background (highlight selected cell) *)
       let bg_color =
         match selected with
         | Some (sr, sc) when sr = row && sc = col -> selected_color
@@ -70,7 +74,7 @@ let draw_board (ctx : Cairo.context) board selected =
       in
       drawing_background ctx bg_color x y ;
 
-      (* Draw cell content *)
+      (* Cell content with appropriate color coding *)
       match board.(row).(col) with
       | Empty -> ()
       | Fixed n | Mutable n ->
@@ -85,10 +89,10 @@ let draw_board (ctx : Cairo.context) board selected =
     done
   done ;
 
-  (* Draw grid *)
   draw_grid ctx
 
-(* Convert screen position to board position *)
+(** Converts screen coordinates to board position (row, col). Returns None if
+    click is outside the board area. *)
 let screen_to_board_pos x y =
   let fx = float_of_int x in
   let fy = float_of_int y in

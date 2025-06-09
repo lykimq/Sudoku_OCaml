@@ -1,10 +1,9 @@
-(* Represents the current status of the game *)
+(** Game status tracking for completion detection. *)
 type game_status =
   | InProgress
-  | Complete of string (* Contains the completion message *)
+  | Complete of string (* Completion message *)
 
-(* Checks if the game has been successfully completed and returns the
-   appropriate status. *)
+(** Checks board completion and returns appropriate status with message. *)
 let get_game_status board =
   let solved = Board_validation.is_board_solved board in
   Ui_debug.debug "Solved: %b\n" solved ;
@@ -17,6 +16,8 @@ let get_game_status board =
        like to start a new game?"
   else InProgress
 
+(** Checks for game completion and shows dialog if solved. Returns true if new
+    game was started, false otherwise. *)
 let check_game_completion board =
   Ui_debug.debug "Checking game completion\n" ;
   flush stdout ;

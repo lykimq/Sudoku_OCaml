@@ -1,5 +1,5 @@
 let create_window board_ref ~key_press_handler ~click_handler =
-  (* Create window *)
+  (* Create main window with padding for UI elements *)
   let padding = 40 in
   let window =
     GWindow.window ~title:"Sudoku"
@@ -10,34 +10,31 @@ let create_window board_ref ~key_press_handler ~click_handler =
 
   let vbox = GPack.vbox ~packing:window#add () in
 
-  (* Add menu *)
+  (* Add menu bar *)
   Ui_menu.create_menu window board_ref vbox ;
 
-  (* Handle window close *)
+  (* Handle window close event *)
   let _ = window#connect#destroy ~callback:GMain.quit in
 
-  (* Drawing area *)
+  (* Create drawing area for game board *)
   let drawing_area =
     GMisc.drawing_area ~packing:(vbox#pack ~expand:true ~fill:true) ()
   in
   drawing_area#misc#set_size_request ~width:Ui_config.total_size
     ~height:Ui_config.total_size () ;
 
-  (* Store drawing area reference for global access *)
+  (* Store references for global access *)
   Ui_state.current_drawing_area := Some drawing_area ;
   Ui_state.current_board := !board_ref ;
 
-  (* Connect to the draw signal using the underlying widget *)
+  (* Main draw callback - renders board and optional hints *)
   let draw_callback ctx =
-    (* Draw the main board *)
     Ui_board.draw_board ctx !board_ref !Ui_state.selected ;
-    (* Draw the hints if the show hints option is on *)
     if !Ui_state.show_hints
     then begin
-      (* If the hints are empty, compute them *)
+      (* Lazy hint computation - only calculate when needed *)
       if Array.for_all (Array.for_all (fun x -> x = [])) !Ui_state.current_hints
       then Ui_state.current_hints := Hints.get_all_hints !board_ref ;
-      (* Draw the hints *)
       Ui_hints.draw_hints ctx !Ui_state.current_hints
     end ;
     false
@@ -46,14 +43,13 @@ let create_window board_ref ~key_press_handler ~click_handler =
     (GtkSignal.connect ~sgn:GtkBase.Widget.S.draw ~callback:draw_callback
        drawing_area#as_widget) ;
 
-  (* Mouse click callback *)
+  (* Event handlers *)
   let _ = ignore (Ui_events.handle_mouse_click drawing_area click_handler) in
 
-  (* Enable button press events *)
+  (* Enable events and focus *)
   drawing_area#event#add [`BUTTON_PRESS] ;
   drawing_area#misc#set_can_focus true ;
 
-  (* Key press callback - handles all keyboard input for the game *)
   let _ =
     ignore
       (Ui_events.handle_key_press window board_ref drawing_area
@@ -62,6 +58,11 @@ let create_window board_ref ~key_press_handler ~click_handler =
 
   window
 
+(** Main UI entry point with configurable handlers and debug mode.
+
+    Design: Functional approach with optional parameters for customization.
+    State initialization: Resets game state and creates initial board reference.
+*)
 let start_ui ?(debug = false) ?(key_press_handler = fun _ -> None)
     ?(click_handler = fun _ _ -> ()) initial_board =
   Ui_debug.debug_mode := debug ;
