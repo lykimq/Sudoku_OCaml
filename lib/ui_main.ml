@@ -29,13 +29,14 @@ let create_window board_ref ~key_press_handler ~click_handler =
 
   (* Main draw callback - renders board and optional hints *)
   let draw_callback ctx =
-    Ui_board.draw_board ctx !board_ref !Ui_state.selected ;
+    (* Use consistent board reference for both board drawing and hints *)
+    Ui_board.draw_board ctx !Ui_state.current_board !Ui_state.selected ;
     if !Ui_state.show_hints
     then begin
       (* Lazy hint computation - only calculate when needed. Check if hints are
          already computed (all arrays are empty), if not, compute them. *)
       if Array.for_all (Array.for_all (fun x -> x = [])) !Ui_state.current_hints
-      then Ui_state.current_hints := Hints.get_all_hints !board_ref ;
+      then Ui_state.current_hints := Hints.get_all_hints !Ui_state.current_board ;
       Ui_hints.draw_hints ctx !Ui_state.current_hints
     end ;
     false

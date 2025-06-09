@@ -39,7 +39,7 @@ let refresh_display () =
 
 (** Resource cleanup function to prevent memory leaks *)
 let cleanup_resources () =
-  current_drawing_area := None ;
+  (* Don't clear current_drawing_area as it's needed for the game to function *)
   current_hints := Hints.make_empty_hint_board () ;
   Gc.minor () (* Trigger minor garbage collection *)
 

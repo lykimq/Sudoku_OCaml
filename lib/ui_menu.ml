@@ -15,9 +15,12 @@ let create_menu window board_ref (vbox : GPack.box) =
     ignore
       (new_game_factory#add_item label ~callback:(fun () ->
            Ui_state.reset_game_state () ;
-           board_ref :=
+           let new_board =
              Board.of_array
-               (Board_generate.generate_random_board ~difficulty ()) ;
+               (Board_generate.generate_random_board ~difficulty ())
+           in
+           board_ref := new_board ;
+           Ui_state.current_board := new_board ;
            GtkBase.Widget.queue_draw window#as_widget))
   in
 

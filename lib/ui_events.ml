@@ -46,7 +46,10 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                     Ui_debug.debug "Cell cleared successfully\n" ;
                     (* Remove error highlighting since cell is now empty *)
                     Invalid_cells.clear_invalid ~row ~col ;
+                    (* Update both board references so hints display
+                       correctly *)
                     board_ref := new_board ;
+                    Ui_state.current_board := new_board ;
                     (* Clear cached hints - they're outdated since board
                        changed *)
                     Ui_state.current_hints := Hints.make_empty_hint_board () ;
@@ -59,7 +62,10 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                 (match Board_mutation.set_cell !board_ref ~row ~col ~value with
                 | Some (new_board, is_valid) ->
                     Ui_debug.debug "Cell updated successfully\n" ;
+                    (* Update both board references so hints display
+                       correctly *)
                     board_ref := new_board ;
+                    Ui_state.current_board := new_board ;
                     (* Reset hints cache - placing/changing a number affects
                        possible values in other cells *)
                     Ui_state.current_hints := Hints.make_empty_hint_board () ;
@@ -76,9 +82,12 @@ let handle_key_press window board_ref drawing_area key_press_handler =
                     if Game_state.check_game_completion !board_ref
                     then begin
                       Ui_state.reset_game_state () ;
-                      (* Create new board *)
-                      board_ref :=
-                        Board.of_array (Game_state.create_new_board ()) ;
+                      (* Create new board and update both references *)
+                      let new_board =
+                        Board.of_array (Game_state.create_new_board ())
+                      in
+                      board_ref := new_board ;
+                      Ui_state.current_board := new_board ;
                       GtkBase.Widget.queue_draw drawing_area#as_widget
                     end
                 | None -> Ui_debug.debug "Failed to update cell\n") ;
