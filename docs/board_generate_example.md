@@ -1,4 +1,4 @@
-# Demostrate Board Generate Example
+# Demonstrate Board Generate Example
 
 ## Why ShufflePool?
 
