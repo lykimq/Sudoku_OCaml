@@ -1,13 +1,18 @@
 open Sudoku_OCaml
 
-(** Main application initialization and startup sequence.
+(* Main application initialization and startup sequence.
 
-    Algorithm: Application bootstrap sequence
-    - Initialize random number generator for deterministic testing/debugging
-    - Generate initial game board using default difficulty
-    - Configure keyboard input mapping for multi-platform compatibility
-    - Configure mouse interaction handler for UI refresh coordination
-    - Start UI with debug mode enabled and configured handlers *)
+   Algorithm: Application bootstrap sequence
+
+   - Initialize random number generator for deterministic testing/debugging
+
+   - Generate initial game board using default difficulty
+
+   - Configure keyboard input mapping for multi-platform compatibility
+
+   - Configure mouse interaction handler for UI refresh coordination
+
+   - Start UI with debug mode enabled and configured handlers *)
 let () =
   Random.self_init () ;
   let board = Game_state.create_new_board () in
