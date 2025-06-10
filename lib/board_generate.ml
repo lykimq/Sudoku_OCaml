@@ -12,23 +12,27 @@ open Board
 
 module Constants = struct
   let board_size = 9
+
   let box_size = 3
+
   let total_cells = 81
+
   let pool_size = 10
+
   let diagonal_positions = [(0, 0); (3, 3); (6, 6)]
 end
 
 (* Puzzle difficulty levels with associated cell removal targets. *)
-type difficulty =
-  | Easy
-  | Medium
-  | Hard
+type difficulty = Easy | Medium | Hard
 
 (* Configuration for difficulty levels. *)
 let difficulty_config = function
-  | Easy -> 35 (* ~57% filled *)
-  | Medium -> 45 (* ~44% filled *)
-  | Hard -> 55 (* ~32% filled *)
+  | Easy ->
+      35 (* ~57% filled *)
+  | Medium ->
+      45 (* ~44% filled *)
+  | Hard ->
+      55 (* ~32% filled *)
 
 (* Error types for better error handling and debugging. *)
 type generation_error =
@@ -100,8 +104,10 @@ module BoardUtils = struct
     for row = 0 to Constants.board_size - 1 do
       for col = 0 to Constants.board_size - 1 do
         match board.(row).(col) with
-        | Fixed _ -> positions := (row, col) :: !positions
-        | Empty | Mutable _ -> ()
+        | Fixed _ ->
+            positions := (row, col) :: !positions
+        | Empty | Mutable _ ->
+            ()
       done
     done ;
     Array.of_list !positions
@@ -116,8 +122,8 @@ end
    complexity in subsequent solving phase. Mathematical optimization based on
    Sudoku constraint structure. *)
 let fill_diagonal_box board row col ~pool ~pool_index ~rng =
-  if not (BoardUtils.is_valid_diagonal_pos row col)
-  then Error (Invalid_diagonal_position (row, col))
+  if not (BoardUtils.is_valid_diagonal_pos row col) then
+    Error (Invalid_diagonal_position (row, col))
   else
     let nums = ShufflePool.get_shuffled pool ~index:pool_index ~rng in
     let k = ref 0 in
@@ -137,40 +143,35 @@ let fill_diagonal_box board row col ~pool ~pool_index ~rng =
 let solve_board board ~rng =
   let pool = ShufflePool.create ~rng () in
   let pool_index = ref 0 in
-
   let rec solve ~row ~col =
     match (row, col) with
-    | 9, _ -> true (* Completed *)
-    | _, 9 -> solve ~row:(row + 1) ~col:0 (* Next row *)
+    | 9, _ ->
+        true (* Completed *)
+    | _, 9 ->
+        solve ~row:(row + 1) ~col:0 (* Next row *)
     | _ when board.(row).(col) <> Empty ->
         solve ~row ~col:(col + 1) (* Skip filled *)
     | _ ->
         (* Get randomized numbers for current cell*)
         let nums = ShufflePool.get_shuffled pool ~index:!pool_index ~rng in
         incr pool_index ;
-
         (* Try each number in random order. *)
         let rec try_numbers i =
-          if i >= Constants.board_size
-          then false
+          if i >= Constants.board_size then false
           else
             let num = nums.(i) in
             (* Check if the number is valid for the current cell. *)
-            if Board_validation.is_valid_move board ~row ~col ~value:num
-            then begin
+            if Board_validation.is_valid_move board ~row ~col ~value:num then (
               (* Place the number in the current cell. *)
               board.(row).(col) <- Fixed num ;
               (* Try next cell. *)
-              if solve ~row ~col:(col + 1)
-              then true
-              else begin
+              if solve ~row ~col:(col + 1) then true
+              else (
                 (* Backtrack. *)
                 board.(row).(col) <- Empty ;
-                try_numbers (i + 1)
-              end
-            end
+                try_numbers (i + 1) ) )
             (* Try next number. *)
-            else try_numbers (i + 1)
+              else try_numbers (i + 1)
         in
         (* Try first number. *)
         try_numbers 0
@@ -192,14 +193,14 @@ let count_solutions board ~max_solutions =
   (* Create a copy of the board to avoid mutating the original board. *)
   let board_copy = BoardUtils.copy_board board in
   let solution_count = ref 0 in
-
   let rec count_solve ~row ~col =
-    if !solution_count >= max_solutions
-    then ()
+    if !solution_count >= max_solutions then ()
     else
       match (row, col) with
-      | 9, _ -> incr solution_count (* Found solution *)
-      | _, 9 -> count_solve ~row:(row + 1) ~col:0 (* Next row *)
+      | 9, _ ->
+          incr solution_count (* Found solution *)
+      | _, 9 ->
+          count_solve ~row:(row + 1) ~col:0 (* Next row *)
       | _ when board_copy.(row).(col) <> Empty ->
           count_solve ~row ~col:(col + 1) (* Skip filled *)
       | _ ->
@@ -208,18 +209,16 @@ let count_solutions board ~max_solutions =
             if
               !solution_count < max_solutions
               && Board_validation.is_valid_move board_copy ~row ~col ~value:num
-            then begin
+            then (
               (* Place the number in the current cell. *)
               board_copy.(row).(col) <- Fixed num ;
               (* Try next cell. *)
               count_solve ~row ~col:(col + 1) ;
               (* Backtrack. *)
-              board_copy.(row).(col) <- Empty
-            end
+              board_copy.(row).(col) <- Empty )
           done
   in
-  count_solve ~row:0 ~col:0 ;
-  !solution_count
+  count_solve ~row:0 ~col:0 ; !solution_count
 
 (* Check if puzzle has exactly one solution. *)
 let has_unique_solution board = count_solutions board ~max_solutions:2 = 1
@@ -251,36 +250,29 @@ let remove_cells_strategically board ~cells_to_remove ~rng =
   let positions = BoardUtils.get_filled_positions board in
   (* Shuffle positions randomly. *)
   let shuffled_positions = Fisher_yates.shuffle ~rng positions in
-
   (* Remove cells strategically. *)
   let removed_count = ref 0 in
   let i = ref 0 in
-
   (* Remove cells strategically. *)
   while
     !removed_count < cells_to_remove && !i < Array.length shuffled_positions
   do
     (* Get the next position to remove. *)
     let row, col = shuffled_positions.(!i) in
-
     (* Temporarily remove the cell value. *)
-    (match board.(row).(col) with
+    ( match board.(row).(col) with
     | Fixed value ->
         (* Temporarily remove the cell value. *)
         board.(row).(col) <- Empty ;
-
         (* Check if puzzle still has unique solution. *)
-        if has_unique_solution board
-        then begin
+        if has_unique_solution board then
           (* Increment the removed count. *)
           incr removed_count
-        end
-        else begin
+        else
           (* Restore the cell value. *)
           board.(row).(col) <- Fixed value
-        end
-    | Empty | Mutable _ -> () (* Skip non-fixed cells *)) ;
-
+    | Empty | Mutable _ ->
+        () (* Skip non-fixed cells *) ) ;
     (* Increment the position index. *)
     incr i
   done ;
@@ -315,23 +307,23 @@ let generate_random_board ?(difficulty = Easy)
     ?(rng = Random.State.make_self_init ()) () =
   let board = Board.create () in
   let pool = ShufflePool.create ~rng () in
-
   (* Phase 1: Fill diagonal boxes *)
   let fill_diagonals () =
     let rec fill_boxes positions pool_index =
       match positions with
-      | [] -> Ok pool_index
+      | [] ->
+          Ok pool_index
       | (row, col) :: rest -> (
-          match fill_diagonal_box board row col ~pool ~pool_index ~rng with
-          | Ok () -> fill_boxes rest (pool_index + 1)
-          | Error e -> Error e)
+        match fill_diagonal_box board row col ~pool ~pool_index ~rng with
+        | Ok () ->
+            fill_boxes rest (pool_index + 1)
+        | Error e ->
+            Error e )
     in
     fill_boxes Constants.diagonal_positions 0
   in
-
   (* Phase 2: Complete the board *)
   let complete_board () = solve_board board ~rng in
-
   (* Phase 3: Remove cells strategically *)
   let create_puzzle () =
     let target_removals = difficulty_config difficulty in
@@ -339,31 +331,35 @@ let generate_random_board ?(difficulty = Easy)
       remove_cells_strategically board ~cells_to_remove:target_removals ~rng
     in
     let remaining_cells = Constants.total_cells - actual_removed in
-
     Printf.printf
       "Generated %s puzzle: %d/%d cells removed, %d remaining (%.1f%% filled)\n"
-      (match difficulty with
-      | Easy -> "Easy"
-      | Medium -> "Medium"
-      | Hard -> "Hard")
+      ( match difficulty with
+      | Easy ->
+          "Easy"
+      | Medium ->
+          "Medium"
+      | Hard ->
+          "Hard" )
       actual_removed target_removals remaining_cells
-      (float_of_int remaining_cells
+      ( float_of_int remaining_cells
       /. float_of_int Constants.total_cells
-      *. 100.0) ;
-
+      *. 100.0 ) ;
     Ok actual_removed
   in
-
   (* Execute all phases *)
   match fill_diagonals () with
-  | Error e -> Error e
+  | Error e ->
+      Error e
   | Ok _ -> (
-      match complete_board () with
-      | Error e -> Error e
-      | Ok () -> (
-          match create_puzzle () with
-          | Error e -> Error e
-          | Ok _ -> Ok (Board.to_array board)))
+    match complete_board () with
+    | Error e ->
+        Error e
+    | Ok () -> (
+      match create_puzzle () with
+      | Error e ->
+          Error e
+      | Ok _ ->
+          Ok (Board.to_array board) ) )
 
 (* Generate board with error handling and Option type interface instead of
    Result type for simpler client code.
@@ -373,12 +369,15 @@ let generate_random_board ?(difficulty = Easy)
 let generate_safe ?(difficulty = Easy) ?(rng = Random.State.make_self_init ())
     () =
   match generate_random_board ~difficulty ~rng () with
-  | Ok board -> Some board
+  | Ok board ->
+      Some board
   | Error err ->
       Printf.eprintf "Board generation failed: %s\n"
-        (match err with
+        ( match err with
         | Invalid_diagonal_position (r, c) ->
             Printf.sprintf "Invalid diagonal position (%d,%d)" r c
-        | Board_solving_failed -> "Failed to solve board"
-        | Invalid_board_state -> "Invalid board state") ;
+        | Board_solving_failed ->
+            "Failed to solve board"
+        | Invalid_board_state ->
+            "Invalid board state" ) ;
       None
