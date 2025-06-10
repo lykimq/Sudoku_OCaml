@@ -1,9 +1,36 @@
-(** Keyboard input handler for game controls and number entry.
+(* Keyboard input handler for game controls and number entry.
 
-    Design: Single callback handles all key types (arrows, numbers, special
-    keys). State management: Updates selection, board state, and triggers
-    redraws. Game flow: Integrates completion checking and new game generation.
-*)
+   Functional Purpose: Provides comprehensive keyboard interface for game
+   interaction including navigation, number entry, and cell manipulation.
+
+   Design Choice: Single unified handler over multiple specialized handlers -
+   Centralized keyboard logic for consistent behavior - State-based dispatch for
+   different interaction modes - Comprehensive debug logging for development and
+   troubleshooting - Integration with game completion flow for seamless user
+   experience
+
+   Algorithm: Event-driven state machine with pattern matching 1. Capture GTK+
+   key press events with keyval extraction 2. Pattern match on current selection
+   state and key type: - Arrow keys: Navigation within board boundaries - Number
+   keys: Cell value entry with validation - Special keys: Cell clearing and
+   other actions 3. Update appropriate state (selection, board, UI) based on
+   action 4. Trigger visual feedback through redraw scheduling 5. Handle game
+   completion detection and new game flow Time: O(1) per key press +
+   O(board_update) for value changes
+
+   State management integration: - Selection state: Arrow key navigation with
+   boundary checking - Board state: Number entry with validation and error
+   feedback - UI state: Immediate visual feedback and hint cache management -
+   Game flow: Completion detection and automatic new game generation
+
+   Error handling and user feedback: - Invalid moves: Visual error highlighting
+   with red cell background - Fixed cells: Graceful rejection of modification
+   attempts - Bounds checking: Navigation constrained to valid board area -
+   Debug logging: Comprehensive event tracking for development
+
+   Alternative approaches: - Separate handlers: More modular but complex
+   coordination - Command pattern: Better for undo/redo but more complex - State
+   machine: More formal but potentially over-engineered *)
 let handle_key_press window board_ref drawing_area key_press_handler =
   window#event#connect#key_press ~callback:(fun ev ->
       let key = GdkEvent.Key.keyval ev in
@@ -102,11 +129,37 @@ let handle_key_press window board_ref drawing_area key_press_handler =
       flush stdout ;
       result)
 
-(** Mouse click handler for cell selection.
+(* Mouse click handler for cell selection and user interaction.
 
-    Design: Converts screen coordinates to board positions. Filtering: Only
-    processes left mouse button clicks. State: Updates selected cell and
-    triggers redraw. *)
+   Functional Purpose: Translates mouse clicks to board cell selection for
+   intuitive point-and-click interaction with the game board.
+
+   Design Choice: Left-click only interaction for simplicity - Single-button
+   interaction reduces complexity and user confusion - Left-click is universal
+   primary action across platforms - Coordinate transformation handles margin
+   and scaling automatically - Option type handling for clicks outside valid
+   board area
+
+   Algorithm: Coordinate transformation with event filtering 1. Extract mouse
+   coordinates from GTK+ button press event 2. Filter events to handle only left
+   mouse button (button 1) 3. Transform screen coordinates to board grid
+   coordinates 4. Update selection state with new position (or None for invalid)
+   5. Trigger visual feedback through redraw scheduling 6. Delegate to custom
+   click handler for extensibility Time: O(1) coordinate transformation and
+   state update
+
+   Coordinate system handling: - Screen coordinates: Pixel-based from top-left
+   of widget - Board coordinates: Grid-based (row, col) from top-left of board -
+   Margin handling: Automatic offset for board positioning - Bounds checking:
+   Graceful handling of clicks outside board
+
+   Event filtering rationale: - Button 1 (left): Primary selection action -
+   Other buttons: Ignored to prevent accidental actions - Future extensibility:
+   Could add right-click context menus
+
+   Alternative approaches: - Multi-button support: Right-click for hints, middle
+   for clearing - Touch support: Gesture recognition for mobile interfaces -
+   Hover effects: Visual feedback before clicking *)
 let handle_mouse_click drawing_area click_handler =
   drawing_area#event#connect#button_press ~callback:(fun ev ->
       let x = int_of_float (GdkEvent.Button.x ev) in

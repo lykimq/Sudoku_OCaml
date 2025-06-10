@@ -21,5 +21,8 @@ test:
 
 .PHONY: fmt
 fmt:
-	ocamlformat -i lib/*.ml lib/*.mli
+	ocamlformat -i lib/*.ml
+	@if ls lib/*.mli 1> /dev/null 2>&1; then \
+		ocamlformat -i lib/*.mli; \
+	fi
 
